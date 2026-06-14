@@ -65,3 +65,16 @@ triangle = ry.Triangle.from_frame(claims, mapping=mapping)
 ```
 
 Mapping belongs in the Python adapter, CLI, backend import job, and UI import wizard. The Rust core receives canonical validated inputs only.
+
+Exposure mappings use the same source-column or constant convention:
+
+```python
+mapping = ry.ExposureMapping(
+    origin="AY",
+    value="earned_premium",
+    exposure_measure={"const": "earned_premium"},
+    portfolio="segment",
+    valuation_date={"const": "2026-12-31"},
+    currency={"const": "CHF"},
+)
+```

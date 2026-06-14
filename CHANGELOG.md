@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Frozen Python `ClaimsMapping` and `ExposureMapping` objects for reusable canonical column mapping configuration.
 - Starter monorepo scaffold for the Rust actuarial core, Python bindings, Go services, SvelteKit workbench, contracts, docs, infra, and agent workflows.
 - Repository governance documents for contribution, release, security, roadmap, model governance, data contracts, and engineering principles.
 - Scoped Go service and SvelteKit UI agent skills, Svelte MCP setup examples, and Go quality tooling hooks.

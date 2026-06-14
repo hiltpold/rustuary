@@ -6,7 +6,7 @@ This backlog is ordered for the first vertical slice. Complete tasks in order un
 
 Goal: allow actuaries to load their own dataframe columns while keeping the Rust engine canonical and deterministic.
 
-- [ ] Define Python `ClaimsMapping` and `ExposureMapping` objects.
+- [x] Define Python `ClaimsMapping` and `ExposureMapping` objects.
 - [ ] Implement `Triangle.from_frame(data, *, origin, development, value, cumulative, ...)` convenience API.
 - [ ] Implement `Triangle.from_frame(data, mapping=ClaimsMapping(...))` reusable API.
 - [ ] Accept pandas, Polars, and PyArrow inputs by converting to a canonical PyArrow table.
