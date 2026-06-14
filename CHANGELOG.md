@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Expanded `Triangle.from_frame` named mapping parameters to cover the complete claims column-mapping contract.
 - Frozen Python `ClaimsMapping` and `ExposureMapping` objects for reusable canonical column mapping configuration.
 - Starter monorepo scaffold for the Rust actuarial core, Python bindings, Go services, SvelteKit workbench, contracts, docs, infra, and agent workflows.
 - Repository governance documents for contribution, release, security, roadmap, model governance, data contracts, and engineering principles.

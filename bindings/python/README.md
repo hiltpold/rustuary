@@ -43,8 +43,11 @@ triangle = ry.Triangle.from_frame(
     value="paid_loss",
     cumulative=True,
     portfolio="segment",
-    valuation_date="2026-12-31",
-    measure="paid",
+    valuation_date={"const": "2026-12-31"},
+    measure={"const": "paid"},
+    currency={"const": "CHF"},
+    origin_type="accident_year",
+    development_unit="months",
 )
 ```
 
