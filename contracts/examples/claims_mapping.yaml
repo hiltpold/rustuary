@@ -1,0 +1,14 @@
+claims_mapping:
+  origin: AY
+  development: dev_month
+  value: paid_loss
+  portfolio: segment
+  valuation_date:
+    const: 2026-12-31
+  measure:
+    const: paid
+  cumulative: true
+  currency:
+    const: CHF
+  origin_type: accident_year
+  development_unit: months

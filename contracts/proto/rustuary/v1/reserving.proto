@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package rustuary.v1;
+
+message ArtifactRef {
+  string uri = 1;
+  string content_type = 2;
+  string sha256 = 3;
+}
+
+message RunReservingRequest {
+  string model_run_id = 1;
+  string portfolio_id = 2;
+  string valuation_date = 3;
+  ArtifactRef input = 4;
+  ArtifactRef assumptions = 5;
+}
+
+message RunReservingResponse {
+  string model_run_id = 1;
+  string status = 2;
+  ArtifactRef output = 3;
+}
+
+service ReservingEngine {
+  rpc RunReserving(RunReservingRequest) returns (RunReservingResponse);
+}

@@ -1,0 +1,17 @@
+# CODEOWNERS
+# Replace placeholder teams/users once the repository is hosted.
+
+/AGENTS.md                         @maintainers
+/.agents/                          @maintainers
+/.github/                          @maintainers
+/docs/adr/                         @maintainers
+/docs/standards/                   @maintainers
+
+/engines/rustuary-core/            @actuarial-core-team
+/bindings/python/                  @python-bindings-team
+/services/api/                     @backend-team
+/services/worker/                  @backend-team
+/apps/workbench/                   @frontend-team
+/contracts/                        @platform-team
+/docs/actuarial/                   @actuarial-core-team
+/data/golden/                      @actuarial-core-team

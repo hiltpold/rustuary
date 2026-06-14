@@ -1,0 +1,12 @@
+# Example Codex CLI MCP configuration for Svelte work.
+# Copy the relevant block into ~/.codex/config.toml.
+
+# Remote Svelte MCP server.
+experimental_use_rmcp_client = true
+[mcp_servers.svelte]
+url = "https://mcp.svelte.dev/mcp"
+
+# Alternative local stdio Svelte MCP server.
+# [mcp_servers.svelte]
+# command = "npx"
+# args = ["-y", "@sveltejs/mcp"]

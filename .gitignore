@@ -1,0 +1,41 @@
+# OS/editor
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Rust
+/target/
+# Commit Cargo.lock for this application monorepo when it is generated.
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.svelte-kit/
+.vercel/
+apps/workbench/build/
+apps/workbench/.env
+
+# Go
+bin/
+coverage.out
+
+# Local data and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+local-data/

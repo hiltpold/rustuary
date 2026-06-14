@@ -1,0 +1,53 @@
+# Column mapping schema
+
+Column mappings adapt external user data into Rustuary canonical contracts.
+
+## ClaimsMapping
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `origin` | string | yes | Source column for canonical `origin_period`. |
+| `development` | string | yes | Source column for canonical `development_age`. |
+| `value` | string | yes | Source column for canonical `amount`. |
+| `portfolio` | string/object | no | Source column or constant for canonical `portfolio_id`. |
+| `valuation_date` | string/object | no | Source column or constant for canonical `valuation_date`. |
+| `measure` | string/object | no | Source column or constant for canonical `measure`. |
+| `cumulative` | bool/string | yes | Constant boolean or source column for canonical `is_cumulative`. |
+| `currency` | string/object | no | Source column or constant for canonical `currency`. |
+| `origin_type` | string | no | Semantic origin basis. |
+| `development_unit` | string | no | `months`, `quarters`, or `years`. |
+
+Constant values may be represented in config as:
+
+```yaml
+measure:
+  const: paid
+valuation_date:
+  const: 2026-12-31
+```
+
+For Python convenience, plain scalar constants are also allowed:
+
+```python
+ry.ClaimsMapping(measure="paid", valuation_date="2026-12-31")
+```
+
+## ExposureMapping
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `origin` | string | yes | Source column for canonical `origin_period`. |
+| `value` | string | yes | Source column for canonical `amount`. |
+| `portfolio` | string/object | no | Source column or constant for canonical `portfolio_id`. |
+| `valuation_date` | string/object | no | Source column or constant for canonical `valuation_date`. |
+| `exposure_measure` | string/object | yes | Source column or constant exposure measure. |
+| `currency` | string/object | no | Source column or constant currency. |
+
+## Persistence rule
+
+Every model run that used non-canonical external input must persist:
+
+- mapping config
+- input source URI or file hash when available
+- canonical schema version
+- validation report

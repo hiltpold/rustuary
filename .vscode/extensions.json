@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "vadimcn.vscode-lldb",
+    "golang.go",
+    "svelte.svelte-vscode",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "tamasfe.even-better-toml"
+  ]
+}

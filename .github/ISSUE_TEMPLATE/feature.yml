@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a product, platform, API, or developer-experience feature.
+title: "feat: "
+labels: ["type: feature", "needs triage"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be possible after this feature exists?
+    validations:
+      required: true
+  - type: textarea
+    id: users
+    attributes:
+      label: Users and workflow
+      description: Who uses this and where does it fit in the reserving workflow?
+    validations:
+      required: true
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Non-goals
+      description: What should be explicitly out of scope?
+  - type: checkboxes
+    id: affected
+    attributes:
+      label: Affected areas
+      options:
+        - label: Rust actuarial core
+        - label: Python bindings
+        - label: Go API/workflow service
+        - label: SvelteKit workbench
+        - label: Data contracts or schemas
+        - label: Documentation/governance
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Bullet list of observable outcomes.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true

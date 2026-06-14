@@ -1,0 +1,46 @@
+name: Actuarial method change
+description: Add or change a reserving method, diagnostic, factor selection, or model-selection behavior.
+title: "model: "
+labels: ["type: actuarial", "needs model review"]
+body:
+  - type: textarea
+    id: method
+    attributes:
+      label: Method or calculation change
+      description: Which method, diagnostic, assumption, or selection behavior is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: formula
+    attributes:
+      label: Formula or algorithm
+      description: Provide the calculation details, references, and edge cases.
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Required inputs and assumptions
+      description: Example columns, config fields, selections, tail factors, ELRs, or overrides.
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Required diagnostics
+      description: Intermediate values that must be exposed for audit and review.
+  - type: textarea
+    id: fixtures
+    attributes:
+      label: Golden fixtures and tolerances
+      description: Which fixtures should be added or updated? What tolerance is acceptable?
+    validations:
+      required: true
+  - type: checkboxes
+    id: docs
+    attributes:
+      label: Required documentation updates
+      options:
+        - label: Update `CHANGELOG.md`
+        - label: Update `docs/actuarial/model-governance.md`
+        - label: Update `contracts/DATA_CONTRACTS.md` if schemas change
+        - label: Add or update an ADR if this changes architecture or model governance
+        - label: Add or update examples/golden fixtures

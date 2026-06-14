@@ -1,0 +1,10 @@
+{
+  "name": "rustuary-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "check": "pnpm -r --if-present check",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test"
+  }
+}

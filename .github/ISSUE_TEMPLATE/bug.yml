@@ -1,0 +1,44 @@
+name: Bug report
+description: Report incorrect behavior, failed checks, or broken workflows.
+title: "fix: "
+labels: ["type: bug", "needs triage"]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include commands, fixtures, config, or screenshots where relevant.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Rust, Python, Go, Node/pnpm versions if relevant.
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - label: Could affect actuarial results
+        - label: Could affect public API compatibility
+        - label: Could affect data contracts/schemas
+        - label: Could affect security, privacy, or auditability

@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: Rustuary Reserving API
+  version: 0.1.0
+paths:
+  /v1/healthz:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+  /v1/model-runs:
+    post:
+      summary: Submit a reserving model run
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateModelRunRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelRun'
+components:
+  schemas:
+    CreateModelRunRequest:
+      type: object
+      required: [portfolio_id, valuation_date, input_artifact_uri, assumptions_artifact_uri]
+      properties:
+        portfolio_id:
+          type: string
+        valuation_date:
+          type: string
+          format: date
+        input_artifact_uri:
+          type: string
+          description: URI to normalized input data, usually Parquet or Arrow IPC.
+        assumptions_artifact_uri:
+          type: string
+          description: URI to YAML/JSON assumptions.
+    ModelRun:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, succeeded, failed, cancelled]
+        output_artifact_uri:
+          type: string
+
+
+# TODO: add ColumnMapping schema before accepting backend-submitted file imports.
+# See contracts/schemas/column_mapping.md.

@@ -1,0 +1,19 @@
+[workspace]
+members = [
+  "engines/rustuary-core",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+rust-version = "1.78"
+authors = ["Rustuary contributors"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"

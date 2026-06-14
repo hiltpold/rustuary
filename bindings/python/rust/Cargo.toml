@@ -1,0 +1,13 @@
+[package]
+name = "rustuary-python"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+
+[lib]
+name = "rustuary_python"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py310"] }
+rustuary-core = { path = "../../../engines/rustuary-core" }
