@@ -60,12 +60,14 @@ mapping = ry.ClaimsMapping(
     value="paid_loss",
     cumulative=True,
     portfolio="segment",
-    valuation_date="2026-12-31",
-    measure="paid",
+    valuation_date={"const": "2026-12-31"},
+    measure={"const": "paid"},
 )
 
 triangle = ry.Triangle.from_frame(claims, mapping=mapping)
 ```
+
+Use either `mapping=` or the individual named mapping fields in a call, not both.
 
 Mapping belongs in the Python adapter, CLI, backend import job, and UI import wizard. The Rust core receives canonical validated inputs only.
 
