@@ -1,27 +1,37 @@
 # Python bindings
 
-This package will provide the actuary-facing Python API around the Rust core.
+This package provides the actuary-facing Python API around the Rust core.
 
-Target usage:
+Current input preparation:
 
 ```python
 import rustuary as ry
 
-triangle = ry.Triangle.from_frame(
-    claims,
+mapping = ry.ClaimsMapping(
     origin="accident_year",
     development="development_month",
     value="paid_claims",
     cumulative=True,
 )
 
-result = ry.ChainLadder(tail_factor=1.03).fit_predict(triangle)
-result.summary()
+triangle = ry.Triangle.from_frame(
+    claims,
+    mapping=mapping,
+)
+
+triangle.data
+triangle.model_run_metadata.to_dict()
 ```
+
+Available objects:
+
+- `Triangle`
+- `ClaimsMapping`
+- `ExposureMapping`
+- `ModelRunMetadata`
 
 Planned objects:
 
-- `Triangle`
 - `Exposure`
 - `ChainLadder`
 - `BornhuetterFerguson`
@@ -30,6 +40,10 @@ Planned objects:
 - `ReservingWorkflow`
 - `ReserveResult`
 
+The deterministic input-review workflow is available in
+[`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).
+It intentionally stops before reserve calculation until the public Python
+`ChainLadder` binding is implemented.
 
 ## Column mapping
 
