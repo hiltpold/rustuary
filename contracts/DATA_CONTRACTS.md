@@ -20,6 +20,20 @@ Preferred input format for claims data:
 | `currency` | string | no | Required for monetary cross-currency data. |
 | `is_cumulative` | bool | yes | Whether `amount` is cumulative or incremental. |
 
+### Canonical Rust triangle
+
+Adapters group the long-format claims contract into one homogeneous calculation
+slice before constructing the Rust `Triangle`. The core representation contains:
+
+- unique, strictly increasing `OriginPeriod` row labels
+- unique, strictly increasing `DevelopmentAge` column labels
+- one explicit cumulative or incremental basis
+- a rectangular row-major amount matrix with finite observed values
+- trailing unobserved cells only; gaps between observed cells are invalid
+
+Portfolio, valuation date, measure, and currency remain workflow context for the
+homogeneous slice rather than being repeated in every dense matrix cell.
+
 ## Exposure input
 
 | Field | Type | Required | Notes |

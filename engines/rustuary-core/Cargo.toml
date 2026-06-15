@@ -6,6 +6,9 @@ license.workspace = true
 rust-version.workspace = true
 authors.workspace = true
 
+[dependencies]
+thiserror = "2"
+
 [lib]
 name = "rustuary_core"
 path = "src/lib.rs"

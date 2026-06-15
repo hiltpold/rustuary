@@ -10,5 +10,5 @@ pub mod types;
 
 pub use error::{ActuarialError, Result};
 pub use methods::chain_ladder::{ChainLadder, ChainLadderResult, OriginChainLadderResult};
-pub use triangle::Triangle;
+pub use triangle::{Triangle, TriangleBasis};
 pub use types::{DevelopmentAge, OriginPeriod};

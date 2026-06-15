@@ -26,7 +26,8 @@ impl ChainLadder {
         let mut origins = Vec::with_capacity(triangle.row_count());
 
         for origin_index in 0..triangle.row_count() {
-            let (latest_development_index, latest_observed) = triangle.latest_observed(origin_index)?;
+            let (latest_development_index, latest_observed) =
+                triangle.latest_observed(origin_index)?;
             let cdf_to_ultimate = cdfs[latest_development_index];
             let ultimate = latest_observed * cdf_to_ultimate;
             origins.push(OriginChainLadderResult {
@@ -48,6 +49,7 @@ impl ChainLadder {
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChainLadderResult {
     pub age_to_age_factors: Vec<f64>,
@@ -69,7 +71,7 @@ pub struct OriginChainLadderResult {
 /// Volume-weighted chain-ladder age-to-age factors.
 ///
 /// For each adjacent development age j -> j+1, use rows where both cells are observed:
-/// sum(C[i,j+1]) / sum(C[i,j]).
+/// sum(C\[i,j+1\]) / sum(C\[i,j\]).
 pub fn volume_weighted_factors(triangle: &Triangle) -> Result<Vec<f64>> {
     let mut factors = Vec::with_capacity(triangle.col_count().saturating_sub(1));
 
@@ -119,7 +121,10 @@ mod tests {
 
     fn assert_close(actual: f64, expected: f64) {
         let diff = (actual - expected).abs();
-        assert!(diff < 1e-9, "actual={actual}, expected={expected}, diff={diff}");
+        assert!(
+            diff < 1e-9,
+            "actual={actual}, expected={expected}, diff={diff}"
+        );
     }
 
     #[test]
@@ -159,7 +164,10 @@ mod tests {
         )
         .unwrap();
 
-        let result = ChainLadder::new(1.0).unwrap().fit_predict(&triangle).unwrap();
+        let result = ChainLadder::new(1.0)
+            .unwrap()
+            .fit_predict(&triangle)
+            .unwrap();
         assert_eq!(result.origins.len(), 3);
         assert_close(result.origins[0].ultimate, 240.0);
         assert_close(result.origins[1].ultimate, 210.0 * (240.0 / 180.0));
