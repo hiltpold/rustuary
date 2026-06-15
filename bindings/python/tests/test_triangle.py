@@ -1,7 +1,12 @@
+import json
+from dataclasses import FrozenInstanceError
+from datetime import date
+from decimal import Decimal
+
 import pytest
 import pyarrow as pa
 
-from rustuary import ClaimsMapping, ColumnMappingError, Triangle
+from rustuary import ClaimsMapping, ColumnMappingError, ModelRunMetadata, Triangle
 
 
 def test_triangle_from_frame_stores_required_mapping():
@@ -470,3 +475,101 @@ def test_triangle_from_frame_reports_ambiguous_optional_source_column():
 
     assert exc_info.value.canonical_field == "portfolio_id"
     assert exc_info.value.source_column == "segment"
+
+
+def test_triangle_persists_model_run_mapping_metadata():
+    mapping = ClaimsMapping(
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+        cumulative=True,
+        portfolio="segment",
+        valuation_date={"const": date(2026, 12, 31)},
+        measure={"const": "paid"},
+        currency={"const": "CHF"},
+        origin_type="accident_year",
+        development_unit="months",
+    )
+
+    triangle = Triangle.from_frame(
+        [{"segment": "Motor", "AY": 2024, "dev_month": 12, "paid_loss": 100.0}],
+        mapping=mapping,
+    )
+
+    assert isinstance(triangle.model_run_metadata, ModelRunMetadata)
+    assert triangle.model_run_metadata.to_dict() == {
+        "canonical_schema": "claims_triangle",
+        "canonical_schema_version": "1",
+        "claims_mapping": {
+            "origin": "AY",
+            "development": "dev_month",
+            "value": "paid_loss",
+            "cumulative": True,
+            "portfolio": "segment",
+            "valuation_date": {"const": "2026-12-31"},
+            "measure": {"const": "paid"},
+            "currency": {"const": "CHF"},
+            "origin_type": "accident_year",
+            "development_unit": "months",
+        },
+    }
+    json.dumps(triangle.model_run_metadata.to_dict())
+
+
+def test_model_run_metadata_is_detached_from_mapping_constants():
+    measure = {"const": "paid"}
+    mapping = ClaimsMapping(
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+        measure=measure,
+    )
+    triangle = Triangle.from_frame(
+        [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}],
+        mapping=mapping,
+    )
+
+    measure["const"] = "incurred"
+    returned_mapping = triangle.model_run_metadata.claims_mapping
+    returned_mapping["measure"] = {"const": "reported"}
+
+    assert triangle.model_run_metadata.claims_mapping["measure"] == {"const": "paid"}
+
+
+def test_model_run_metadata_serializes_decimal_constants():
+    metadata = ModelRunMetadata(
+        claims_mapping={
+            "origin": "AY",
+            "development": "dev_month",
+            "value": "paid_loss",
+            "threshold": Decimal("100.50"),
+        }
+    )
+
+    assert metadata.claims_mapping["threshold"] == "100.50"
+    json.dumps(metadata.to_dict())
+
+
+def test_model_run_metadata_is_frozen():
+    metadata = ModelRunMetadata(claims_mapping={})
+
+    with pytest.raises(FrozenInstanceError):
+        metadata.canonical_schema_version = "2"
+
+
+def test_direct_triangle_construction_preserves_existing_signature_and_metadata():
+    triangle = Triangle(
+        data=pa.table(
+            {
+                "origin_period": [2024],
+                "development_age": [12],
+                "amount": [100.0],
+                "is_cumulative": [True],
+            }
+        ),
+        origin="origin_period",
+        development="development_age",
+        value="amount",
+    )
+
+    assert triangle.model_run_metadata.claims_mapping["origin"] == "origin_period"

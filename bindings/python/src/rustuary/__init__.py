@@ -2,6 +2,13 @@
 
 from .errors import ColumnMappingError
 from .mapping import ClaimsMapping, ExposureMapping
+from .metadata import ModelRunMetadata
 from .triangle import Triangle
 
-__all__ = ["ClaimsMapping", "ColumnMappingError", "ExposureMapping", "Triangle"]
+__all__ = [
+    "ClaimsMapping",
+    "ColumnMappingError",
+    "ExposureMapping",
+    "ModelRunMetadata",
+    "Triangle",
+]

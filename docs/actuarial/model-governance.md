@@ -70,4 +70,9 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 When input data uses non-canonical column names, the mapping from source columns to canonical fields is part of the model-run evidence. A reserving result is not reproducible unless the mapping, input source, canonical schema version, assumptions, engine version, and validation report are retained.
 
+The Python `Triangle` preserves the mapping and canonical schema version in a
+model-run metadata placeholder. Workflow-owned evidence such as source hashes,
+assumption versions, engine versions, and validation reports must be added
+before a persisted model run is considered reproducible.
+
 Mapping changes that alter calculated results must be treated as behavior changes and covered by tests, changelog notes, and review.

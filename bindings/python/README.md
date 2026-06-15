@@ -84,6 +84,13 @@ Missing or duplicate required source columns raise `ColumnMappingError`. The
 error identifies both the source column and canonical field and lists the input
 columns available for correction.
 
+Every triangle retains a detached, JSON-safe mapping snapshot for later audit
+and model-run persistence:
+
+```python
+triangle.model_run_metadata.to_dict()
+```
+
 Mapping belongs in the Python adapter, CLI, backend import job, and UI import wizard. The Rust core receives canonical validated inputs only.
 
 Exposure mappings use the same source-column or constant convention:

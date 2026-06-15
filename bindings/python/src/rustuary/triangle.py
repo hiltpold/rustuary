@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, overload
 
 import pyarrow as pa
@@ -8,6 +8,7 @@ import pyarrow as pa
 from ._claims import normalize_claims_table
 from ._dataframe import to_arrow_table
 from .mapping import ClaimsMapping, DevelopmentUnit, MappingValue
+from .metadata import ModelRunMetadata
 
 
 class _Unset:
@@ -37,6 +38,26 @@ class Triangle:
     currency: MappingValue | None = None
     origin_type: str | None = None
     development_unit: DevelopmentUnit | None = None
+    model_run_metadata: ModelRunMetadata = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        mapping = ClaimsMapping(
+            origin=self.origin,
+            development=self.development,
+            value=self.value,
+            cumulative=self.cumulative,
+            portfolio=self.portfolio,
+            valuation_date=self.valuation_date,
+            measure=self.measure,
+            currency=self.currency,
+            origin_type=self.origin_type,
+            development_unit=self.development_unit,
+        )
+        object.__setattr__(
+            self,
+            "model_run_metadata",
+            ModelRunMetadata.from_claims_mapping(mapping),
+        )
 
     @classmethod
     @overload
@@ -144,9 +165,10 @@ class Triangle:
             )
 
         source_table = to_arrow_table(data)
+        normalized_table = normalize_claims_table(source_table, resolved_mapping)
 
         return cls(
-            data=normalize_claims_table(source_table, resolved_mapping),
+            data=normalized_table,
             origin=resolved_mapping.origin,
             development=resolved_mapping.development,
             value=resolved_mapping.value,

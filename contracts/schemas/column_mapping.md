@@ -66,3 +66,8 @@ Every model run that used non-canonical external input must persist:
 - input source URI or file hash when available
 - canonical schema version
 - validation report
+
+The Python `Triangle` currently persists the mapping config and canonical
+schema version in the versioned
+[`model_run_metadata.md`](model_run_metadata.md) placeholder. Workflow-owned
+evidence is added when model-run orchestration is implemented.

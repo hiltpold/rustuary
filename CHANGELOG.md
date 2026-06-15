@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- JSON-safe `ModelRunMetadata` mapping snapshots on canonical Python triangles.
 - Source- and canonical-aware `ColumnMappingError` messages for invalid claims mappings.
 - Canonical claims-field normalization for mapped `Triangle` inputs.
 - PyArrow table conversion for pandas, Polars, PyArrow, and record-sequence triangle inputs.
