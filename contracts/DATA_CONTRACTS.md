@@ -50,6 +50,13 @@ matrix indices, and the latest observed value. The value remains in the
 triangle's current basis; callers requiring cumulative latest values must
 convert the triangle first.
 
+Link-ratio calculation emits one diagnostic for each origin row where adjacent
+development cells are both observed. For cumulative values `C`, the ratio is
+`C[i, j + 1] / C[i, j]`. Diagnostics include origin and development labels,
+matrix indices, both source values, and the ratio. Incremental triangles must be
+converted explicitly. Zero denominators are errors; finite negative ratios are
+retained for review rather than silently excluded.
+
 ## Exposure input
 
 | Field | Type | Required | Notes |

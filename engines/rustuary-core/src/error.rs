@@ -72,6 +72,25 @@ pub enum ActuarialError {
     #[error("origin row {origin_index} has no observed values")]
     NoObservedValue { origin_index: usize },
 
+    #[error("{operation} requires a cumulative triangle")]
+    CumulativeTriangleRequired { operation: &'static str },
+
+    #[error(
+        "link ratio base is zero at origin row {origin_index}, development column {development_index}"
+    )]
+    ZeroLinkRatioBase {
+        origin_index: usize,
+        development_index: usize,
+    },
+
+    #[error(
+        "link ratio is non-finite at origin row {origin_index}, development column {development_index}"
+    )]
+    NonFiniteLinkRatio {
+        origin_index: usize,
+        development_index: usize,
+    },
+
     #[error(
         "development column {development_index} has a non-positive base for factor calculation"
     )]

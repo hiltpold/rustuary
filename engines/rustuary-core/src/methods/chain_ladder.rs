@@ -1,5 +1,5 @@
 use crate::error::{ActuarialError, Result};
-use crate::triangle::Triangle;
+use crate::triangle::{Triangle, TriangleBasis};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChainLadder {
@@ -74,6 +74,12 @@ pub struct OriginChainLadderResult {
 /// For each adjacent development age j -> j+1, use rows where both cells are observed:
 /// sum(C\[i,j+1\]) / sum(C\[i,j\]).
 pub fn volume_weighted_factors(triangle: &Triangle) -> Result<Vec<f64>> {
+    if triangle.basis() != TriangleBasis::Cumulative {
+        return Err(ActuarialError::CumulativeTriangleRequired {
+            operation: "volume-weighted factor calculation",
+        });
+    }
+
     let mut factors = Vec::with_capacity(triangle.col_count().saturating_sub(1));
 
     for development_index in 0..triangle.col_count().saturating_sub(1) {
@@ -119,6 +125,7 @@ pub fn cumulative_development_factors(age_to_age_factors: &[f64], tail_factor: f
 mod tests {
     use super::{cumulative_development_factors, volume_weighted_factors, ChainLadder};
     use crate::triangle::Triangle;
+    use crate::ActuarialError;
 
     fn assert_close(actual: f64, expected: f64) {
         let diff = (actual - expected).abs();
@@ -143,6 +150,18 @@ mod tests {
         let factors = volume_weighted_factors(&triangle).unwrap();
         assert_close(factors[0], 390.0 / 220.0);
         assert_close(factors[1], 240.0 / 180.0);
+    }
+
+    #[test]
+    fn rejects_incremental_volume_weighted_factors() {
+        let triangle = Triangle::from_rows(vec![vec![Some(100.0), Some(80.0)]], false).unwrap();
+
+        assert_eq!(
+            volume_weighted_factors(&triangle).unwrap_err(),
+            ActuarialError::CumulativeTriangleRequired {
+                operation: "volume-weighted factor calculation"
+            }
+        );
     }
 
     #[test]

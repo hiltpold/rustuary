@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Typed cumulative link-ratio diagnostics by origin and development interval.
 - Typed Rust latest-diagonal extraction with origin and development labels.
 - Deterministic cumulative and incremental Rust triangle conversion with preserved axes and missing cells.
 - Canonical Rust `Triangle` axes, cumulative/incremental basis, and construction validation.
@@ -30,6 +31,8 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 - Stronger Rust verification gates for clippy, workspace tests, and rustdoc warnings.
 
 ### Changed
+
+- Rust chain-ladder factor calculation now rejects incremental triangles until explicitly converted.
 
 ### Deprecated
 
