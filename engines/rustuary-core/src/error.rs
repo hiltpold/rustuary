@@ -55,6 +55,14 @@ pub enum ActuarialError {
         development_index: usize,
     },
 
+    #[error(
+        "triangle conversion produced a non-finite value at origin row {origin_index}, development column {development_index}"
+    )]
+    NonFiniteConvertedValue {
+        origin_index: usize,
+        development_index: usize,
+    },
+
     #[error("origin row {origin_index} is outside triangle row count {row_count}")]
     OriginIndexOutOfBounds {
         origin_index: usize,

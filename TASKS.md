@@ -21,7 +21,7 @@ Goal: allow actuaries to load their own dataframe columns while keeping the Rust
 Goal: one reliable deterministic calculation path.
 
 - [x] Finalize canonical Rust `Triangle` domain type.
-- [ ] Add cumulative/incremental conversion.
+- [x] Add cumulative/incremental conversion.
 - [ ] Add latest diagonal extraction.
 - [ ] Add link-ratio calculation.
 - [ ] Add volume-weighted development factor selection.

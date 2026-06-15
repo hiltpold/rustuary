@@ -34,6 +34,16 @@ slice before constructing the Rust `Triangle`. The core representation contains:
 Portfolio, valuation date, measure, and currency remain workflow context for the
 homogeneous slice rather than being repeated in every dense matrix cell.
 
+Basis conversion is row-wise and preserves the canonical axes and trailing
+unobserved cells:
+
+- cumulative from incremental: `C[j] = sum(X[k], k = 0..j)`
+- incremental from cumulative: `X[0] = C[0]` and `X[j] = C[j] - C[j - 1]`
+
+Negative incremental values are valid because recoveries and corrections may
+reduce cumulative claims. Conversion fails if floating-point arithmetic would
+produce a non-finite value.
+
 ## Exposure input
 
 | Field | Type | Required | Notes |

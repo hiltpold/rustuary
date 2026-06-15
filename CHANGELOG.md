@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Deterministic cumulative and incremental Rust triangle conversion with preserved axes and missing cells.
 - Canonical Rust `Triangle` axes, cumulative/incremental basis, and construction validation.
 - Validated custom-column paid claims CSV and matching YAML mapping fixtures.
 - Executable chain-ladder input-review notebook for custom-column claims mapping and audit metadata.

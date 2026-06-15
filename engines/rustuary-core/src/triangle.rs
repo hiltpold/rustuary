@@ -107,6 +107,34 @@ impl Triangle {
         matches!(self.basis, TriangleBasis::Cumulative)
     }
 
+    /// Return a cumulative copy of this triangle.
+    ///
+    /// For an incremental row `X`, cumulative values are calculated as
+    /// `C[j] = sum(X[k], k = 0..j)`. Axes and trailing unobserved cells are
+    /// preserved. A cumulative triangle is returned unchanged apart from the
+    /// cloned allocation.
+    pub fn to_cumulative(&self) -> Result<Self> {
+        if self.basis == TriangleBasis::Cumulative {
+            return Ok(self.clone());
+        }
+
+        self.convert_rows(TriangleBasis::Cumulative)
+    }
+
+    /// Return an incremental copy of this triangle.
+    ///
+    /// The first observed value is unchanged. Later values are calculated as
+    /// `X[j] = C[j] - C[j - 1]`. Negative incremental values are retained
+    /// because cumulative claims may decrease after recoveries or corrections.
+    /// Axes and trailing unobserved cells are preserved.
+    pub fn to_incremental(&self) -> Result<Self> {
+        if self.basis == TriangleBasis::Incremental {
+            return Ok(self.clone());
+        }
+
+        self.convert_rows(TriangleBasis::Incremental)
+    }
+
     /// Return a cell value, or `None` for an unobserved or out-of-bounds cell.
     #[must_use]
     pub fn get(&self, row: usize, col: usize) -> Option<f64> {
@@ -119,6 +147,44 @@ impl Triangle {
             .and_then(|index| self.values.get(index))
             .copied()
             .flatten()
+    }
+
+    fn convert_rows(&self, basis: TriangleBasis) -> Result<Self> {
+        let mut values = Vec::with_capacity(self.values.len());
+
+        for origin_index in 0..self.row_count() {
+            let mut previous = 0.0;
+            for development_index in 0..self.col_count() {
+                match self.get(origin_index, development_index) {
+                    Some(current) => {
+                        let converted = match basis {
+                            TriangleBasis::Cumulative => previous + current,
+                            TriangleBasis::Incremental => current - previous,
+                        };
+                        if !converted.is_finite() {
+                            return Err(ActuarialError::NonFiniteConvertedValue {
+                                origin_index,
+                                development_index,
+                            });
+                        }
+                        values.push(Some(converted));
+                        previous = if basis == TriangleBasis::Cumulative {
+                            converted
+                        } else {
+                            current
+                        };
+                    }
+                    None => values.push(None),
+                }
+            }
+        }
+
+        Ok(Self {
+            origin_periods: self.origin_periods.clone(),
+            development_ages: self.development_ages.clone(),
+            values,
+            basis,
+        })
     }
 
     /// Return the latest observed development index and value for one row.
@@ -270,6 +336,114 @@ mod tests {
             &[DevelopmentAge(0), DevelopmentAge(1)]
         );
         assert_eq!(triangle.basis(), TriangleBasis::Incremental);
+    }
+
+    #[test]
+    fn converts_incremental_rows_to_cumulative() {
+        let incremental = Triangle::new(
+            vec![OriginPeriod(2020), OriginPeriod(2021)],
+            vec![DevelopmentAge(12), DevelopmentAge(24), DevelopmentAge(36)],
+            vec![
+                vec![Some(100.0), Some(50.0), Some(-10.0)],
+                vec![Some(110.0), Some(40.0), None],
+            ],
+            TriangleBasis::Incremental,
+        )
+        .expect("incremental test triangle should be valid");
+
+        let cumulative = incremental
+            .to_cumulative()
+            .expect("finite incremental values should convert");
+
+        assert_eq!(cumulative.basis(), TriangleBasis::Cumulative);
+        assert_eq!(cumulative.origin_periods(), incremental.origin_periods());
+        assert_eq!(
+            cumulative.development_ages(),
+            incremental.development_ages()
+        );
+        assert_eq!(cumulative.get(0, 0), Some(100.0));
+        assert_eq!(cumulative.get(0, 1), Some(150.0));
+        assert_eq!(cumulative.get(0, 2), Some(140.0));
+        assert_eq!(cumulative.get(1, 0), Some(110.0));
+        assert_eq!(cumulative.get(1, 1), Some(150.0));
+        assert_eq!(cumulative.get(1, 2), None);
+    }
+
+    #[test]
+    fn converts_cumulative_rows_to_incremental() {
+        let cumulative = canonical_triangle();
+
+        let incremental = cumulative
+            .to_incremental()
+            .expect("finite cumulative values should convert");
+
+        assert_eq!(incremental.basis(), TriangleBasis::Incremental);
+        assert_eq!(incremental.get(0, 0), Some(100.0));
+        assert_eq!(incremental.get(0, 1), Some(50.0));
+        assert_eq!(incremental.get(0, 2), Some(30.0));
+        assert_eq!(incremental.get(1, 0), Some(110.0));
+        assert_eq!(incremental.get(1, 1), Some(50.0));
+        assert_eq!(incremental.get(1, 2), None);
+    }
+
+    #[test]
+    fn conversion_to_existing_basis_returns_equal_triangle() {
+        let cumulative = canonical_triangle();
+        let incremental = cumulative
+            .to_incremental()
+            .expect("finite cumulative values should convert");
+
+        assert_eq!(
+            cumulative
+                .to_cumulative()
+                .expect("identity conversion should succeed"),
+            cumulative
+        );
+        assert_eq!(
+            incremental
+                .to_incremental()
+                .expect("identity conversion should succeed"),
+            incremental
+        );
+    }
+
+    #[test]
+    fn rejects_non_finite_conversion_results() {
+        let incremental = Triangle::new(
+            vec![OriginPeriod(2020)],
+            vec![DevelopmentAge(12), DevelopmentAge(24)],
+            vec![vec![Some(f64::MAX), Some(f64::MAX)]],
+            TriangleBasis::Incremental,
+        )
+        .expect("finite source amounts should be valid");
+
+        assert_eq!(
+            incremental
+                .to_cumulative()
+                .expect_err("overflow must not create an invalid triangle"),
+            ActuarialError::NonFiniteConvertedValue {
+                origin_index: 0,
+                development_index: 1
+            }
+        );
+
+        let cumulative = Triangle::new(
+            vec![OriginPeriod(2020)],
+            vec![DevelopmentAge(12), DevelopmentAge(24)],
+            vec![vec![Some(f64::MAX), Some(-f64::MAX)]],
+            TriangleBasis::Cumulative,
+        )
+        .expect("finite source amounts should be valid");
+
+        assert_eq!(
+            cumulative
+                .to_incremental()
+                .expect_err("overflow must not create an invalid triangle"),
+            ActuarialError::NonFiniteConvertedValue {
+                origin_index: 0,
+                development_index: 1
+            }
+        );
     }
 
     #[test]
