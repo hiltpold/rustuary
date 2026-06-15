@@ -65,6 +65,14 @@ selected factor. No exclusions, overrides, or fallback assumptions are applied.
 An interval without observations, a non-positive aggregate denominator, or
 non-finite aggregate arithmetic is an error.
 
+Simple-average development factor selection groups link ratios by adjacent
+development interval and selects:
+`sum(C[i, j + 1] / C[i, j]) / observation_count`. Each selection records the
+same typed interval and observation diagnostics as volume weighting. Its
+method-specific numerator is the sum of individual link ratios and its
+denominator is the observation count. No weighting, exclusions, overrides, or
+fallback assumptions are applied.
+
 ## Exposure input
 
 | Field | Type | Required | Notes |

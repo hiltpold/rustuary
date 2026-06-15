@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Typed simple-average development factor selections from individual link ratios.
 - Typed volume-weighted development factor selections with supporting aggregates.
 - Typed cumulative link-ratio diagnostics by origin and development interval.
 - Typed Rust latest-diagonal extraction with origin and development labels.
@@ -33,6 +34,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Changed
 
+- Selected development-factor numerator and denominator diagnostics are now method-specific aggregates.
 - Rust chain-ladder factor calculation now rejects incremental triangles until explicitly converted.
 
 ### Deprecated

@@ -63,6 +63,7 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 | Date | Change | Impact | Validation |
 |---|---|---|---|
+| 2026-06-15 | Added simple-average development factor selection | Selects each age-to-age factor as the arithmetic mean of observed individual link ratios without exclusions or overrides | Unit and golden comparison tests with `1e-9` absolute tolerance |
 | 2026-06-15 | Added volume-weighted development factor selection | Selects each age-to-age factor as the ratio of cumulative aggregate sums without exclusions or overrides | Unit and golden tests with `1e-9` absolute tolerance |
 | 2026-06-15 | Added typed link-ratio diagnostics | Exposes each observed cumulative age-to-age ratio without selecting development factors | Unit and golden tests with `1e-9` absolute tolerance |
 | 2026-06-15 | Added typed latest-diagonal extraction | Exposes origin and development labels for the last observed cell without changing values or basis | Unit and golden tests with `1e-9` absolute tolerance |
