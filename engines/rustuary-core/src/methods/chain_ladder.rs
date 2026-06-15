@@ -1,5 +1,8 @@
 use crate::error::{ActuarialError, Result};
-use crate::triangle::{Triangle, TriangleBasis};
+use crate::methods::development_factor::{
+    select_volume_weighted_factors, SelectedDevelopmentFactor,
+};
+use crate::triangle::Triangle;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChainLadder {
@@ -21,7 +24,11 @@ impl ChainLadder {
     }
 
     pub fn fit_predict(&self, triangle: &Triangle) -> Result<ChainLadderResult> {
-        let age_to_age_factors = volume_weighted_factors(triangle)?;
+        let selected_factors = select_volume_weighted_factors(triangle)?;
+        let age_to_age_factors = selected_factors
+            .iter()
+            .map(|selection| selection.factor)
+            .collect::<Vec<_>>();
         let cdfs = cumulative_development_factors(&age_to_age_factors, self.tail_factor);
         let latest_diagonal = triangle.latest_diagonal()?;
         let mut origins = Vec::with_capacity(latest_diagonal.len());
@@ -43,6 +50,7 @@ impl ChainLadder {
 
         Ok(ChainLadderResult {
             age_to_age_factors,
+            selected_factors,
             cdfs,
             tail_factor: self.tail_factor,
             origins,
@@ -54,6 +62,7 @@ impl ChainLadder {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChainLadderResult {
     pub age_to_age_factors: Vec<f64>,
+    pub selected_factors: Vec<SelectedDevelopmentFactor>,
     pub cdfs: Vec<f64>,
     pub tail_factor: f64,
     pub origins: Vec<OriginChainLadderResult>,
@@ -74,36 +83,12 @@ pub struct OriginChainLadderResult {
 /// For each adjacent development age j -> j+1, use rows where both cells are observed:
 /// sum(C\[i,j+1\]) / sum(C\[i,j\]).
 pub fn volume_weighted_factors(triangle: &Triangle) -> Result<Vec<f64>> {
-    if triangle.basis() != TriangleBasis::Cumulative {
-        return Err(ActuarialError::CumulativeTriangleRequired {
-            operation: "volume-weighted factor calculation",
-        });
-    }
-
-    let mut factors = Vec::with_capacity(triangle.col_count().saturating_sub(1));
-
-    for development_index in 0..triangle.col_count().saturating_sub(1) {
-        let mut numerator = 0.0;
-        let mut denominator = 0.0;
-
-        for row in 0..triangle.row_count() {
-            if let (Some(current), Some(next)) = (
-                triangle.get(row, development_index),
-                triangle.get(row, development_index + 1),
-            ) {
-                numerator += next;
-                denominator += current;
-            }
-        }
-
-        if denominator <= 0.0 {
-            return Err(ActuarialError::NonPositiveDevelopmentBase { development_index });
-        }
-
-        factors.push(numerator / denominator);
-    }
-
-    Ok(factors)
+    select_volume_weighted_factors(triangle).map(|selections| {
+        selections
+            .into_iter()
+            .map(|selection| selection.factor)
+            .collect()
+    })
 }
 
 /// CDF at development index j is product of selected factors from j onward,
@@ -189,6 +174,9 @@ mod tests {
             .fit_predict(&triangle)
             .unwrap();
         assert_eq!(result.origins.len(), 3);
+        assert_eq!(result.selected_factors.len(), 2);
+        assert_close(result.selected_factors[0].numerator, 390.0);
+        assert_close(result.selected_factors[0].denominator, 220.0);
         assert_close(result.origins[0].ultimate, 240.0);
         assert_close(result.origins[1].ultimate, 210.0 * (240.0 / 180.0));
     }

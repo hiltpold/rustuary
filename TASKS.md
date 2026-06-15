@@ -24,7 +24,7 @@ Goal: one reliable deterministic calculation path.
 - [x] Add cumulative/incremental conversion.
 - [x] Add latest diagonal extraction.
 - [x] Add link-ratio calculation.
-- [ ] Add volume-weighted development factor selection.
+- [x] Add volume-weighted development factor selection.
 - [ ] Add simple-average development factor selection.
 - [ ] Add selected factor overrides and exclusions.
 - [ ] Add fixed tail factor interface.

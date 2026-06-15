@@ -91,10 +91,18 @@ pub enum ActuarialError {
         development_index: usize,
     },
 
+    #[error("development column {development_index} has no observed link ratios")]
+    NoDevelopmentFactorObservations { development_index: usize },
+
     #[error(
         "development column {development_index} has a non-positive base for factor calculation"
     )]
     NonPositiveDevelopmentBase { development_index: usize },
+
+    #[error(
+        "development column {development_index} produced a non-finite factor aggregate or selection"
+    )]
+    NonFiniteDevelopmentFactor { development_index: usize },
 
     #[error("tail factor must be positive")]
     InvalidTailFactor,

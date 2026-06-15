@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Typed volume-weighted development factor selections with supporting aggregates.
 - Typed cumulative link-ratio diagnostics by origin and development interval.
 - Typed Rust latest-diagonal extraction with origin and development labels.
 - Deterministic cumulative and incremental Rust triangle conversion with preserved axes and missing cells.

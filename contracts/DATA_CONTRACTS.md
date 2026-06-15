@@ -57,6 +57,14 @@ matrix indices, both source values, and the ratio. Incremental triangles must be
 converted explicitly. Zero denominators are errors; finite negative ratios are
 retained for review rather than silently excluded.
 
+Volume-weighted development factor selection groups the observed link-ratio
+source pairs by adjacent development interval and selects:
+`sum(C[i, j + 1]) / sum(C[i, j])`. Each selection records the method,
+development labels and indices, observation count, numerator, denominator, and
+selected factor. No exclusions, overrides, or fallback assumptions are applied.
+An interval without observations, a non-positive aggregate denominator, or
+non-finite aggregate arithmetic is an error.
+
 ## Exposure input
 
 | Field | Type | Required | Notes |
