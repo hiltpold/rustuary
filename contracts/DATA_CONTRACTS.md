@@ -61,17 +61,32 @@ Volume-weighted development factor selection groups the observed link-ratio
 source pairs by adjacent development interval and selects:
 `sum(C[i, j + 1]) / sum(C[i, j])`. Each selection records the method,
 development labels and indices, observation count, numerator, denominator, and
-selected factor. No exclusions, overrides, or fallback assumptions are applied.
-An interval without observations, a non-positive aggregate denominator, or
-non-finite aggregate arithmetic is an error.
+selected factor. The convenience selector applies no exclusions or overrides.
+An interval without included observations, a non-positive aggregate
+denominator, or non-finite aggregate arithmetic is an error.
 
 Simple-average development factor selection groups link ratios by adjacent
 development interval and selects:
 `sum(C[i, j + 1] / C[i, j]) / observation_count`. Each selection records the
 same typed interval and observation diagnostics as volume weighting. Its
 method-specific numerator is the sum of individual link ratios and its
-denominator is the observation count. No weighting, exclusions, overrides, or
-fallback assumptions are applied.
+denominator is the observation count. The convenience selector applies no
+weighting, exclusions, overrides, or fallback assumptions.
+
+Adjusted development factor selection accepts explicit assumptions:
+
+- A link-ratio exclusion identifies one observed ratio by `origin_period` and
+  `from_development_age`, with a required non-blank rationale.
+- A selected-factor override identifies one adjacent interval by
+  `from_development_age`, with a required positive finite factor and non-blank
+  rationale.
+
+Exclusions are applied before method aggregation. Overrides are applied only
+after the calculated factor passes normal validation. Unknown or duplicate
+assumptions are errors, and exclusions cannot remove every observation from an
+interval. Results retain each excluded source link ratio, the calculated factor
+before override, the applied override and rationale, and the final selected
+factor.
 
 ## Exposure input
 

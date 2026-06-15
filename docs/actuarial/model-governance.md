@@ -63,6 +63,7 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 | Date | Change | Impact | Validation |
 |---|---|---|---|
+| 2026-06-15 | Added selected-factor overrides and link-ratio exclusions | Exclusions alter the observations included in factor calculation; overrides replace validated calculated factors. Both require explicit rationales and remain visible in diagnostics | Unit validation tests and golden adjusted-factor test with `1e-9` absolute tolerance |
 | 2026-06-15 | Added simple-average development factor selection | Selects each age-to-age factor as the arithmetic mean of observed individual link ratios without exclusions or overrides | Unit and golden comparison tests with `1e-9` absolute tolerance |
 | 2026-06-15 | Added volume-weighted development factor selection | Selects each age-to-age factor as the ratio of cumulative aggregate sums without exclusions or overrides | Unit and golden tests with `1e-9` absolute tolerance |
 | 2026-06-15 | Added typed link-ratio diagnostics | Exposes each observed cumulative age-to-age ratio without selecting development factors | Unit and golden tests with `1e-9` absolute tolerance |

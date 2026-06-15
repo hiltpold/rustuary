@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Auditable selected-factor overrides and link-ratio exclusions with required rationales.
 - Typed simple-average development factor selections from individual link ratios.
 - Typed volume-weighted development factor selections with supporting aggregates.
 - Typed cumulative link-ratio diagnostics by origin and development interval.

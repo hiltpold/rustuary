@@ -104,6 +104,58 @@ pub enum ActuarialError {
     )]
     NonFiniteDevelopmentFactor { development_index: usize },
 
+    #[error(
+        "link-ratio exclusion for origin {origin_period:?} and development age {from_development_age:?} requires a rationale"
+    )]
+    EmptyLinkRatioExclusionRationale {
+        origin_period: OriginPeriod,
+        from_development_age: DevelopmentAge,
+    },
+
+    #[error(
+        "link-ratio exclusion for origin {origin_period:?} and development age {from_development_age:?} does not match an observed link ratio"
+    )]
+    UnknownLinkRatioExclusion {
+        origin_period: OriginPeriod,
+        from_development_age: DevelopmentAge,
+    },
+
+    #[error(
+        "link-ratio exclusion for origin {origin_period:?} and development age {from_development_age:?} is duplicated"
+    )]
+    DuplicateLinkRatioExclusion {
+        origin_period: OriginPeriod,
+        from_development_age: DevelopmentAge,
+    },
+
+    #[error(
+        "development-factor override for development age {from_development_age:?} requires a rationale"
+    )]
+    EmptyDevelopmentFactorOverrideRationale {
+        from_development_age: DevelopmentAge,
+    },
+
+    #[error(
+        "development-factor override for development age {from_development_age:?} must be positive and finite"
+    )]
+    InvalidDevelopmentFactorOverride {
+        from_development_age: DevelopmentAge,
+    },
+
+    #[error(
+        "development-factor override for development age {from_development_age:?} does not match a development interval"
+    )]
+    UnknownDevelopmentFactorOverride {
+        from_development_age: DevelopmentAge,
+    },
+
+    #[error(
+        "development-factor override for development age {from_development_age:?} is duplicated"
+    )]
+    DuplicateDevelopmentFactorOverride {
+        from_development_age: DevelopmentAge,
+    },
+
     #[error("tail factor must be positive")]
     InvalidTailFactor,
 }

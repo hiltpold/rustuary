@@ -1,7 +1,7 @@
 use crate::error::{ActuarialError, Result};
-use crate::methods::link_ratio::link_ratios;
+use crate::methods::link_ratio::{link_ratios, LinkRatio};
 use crate::triangle::{Triangle, TriangleBasis};
-use crate::types::DevelopmentAge;
+use crate::types::{DevelopmentAge, OriginPeriod};
 
 /// Method used to select an age-to-age development factor.
 #[allow(clippy::module_name_repetitions)]
@@ -13,9 +13,51 @@ pub enum DevelopmentFactorMethod {
     SimpleAverage,
 }
 
+/// One observed link ratio to omit from development-factor selection.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LinkRatioExclusion {
+    /// Business origin-period label identifying the link ratio.
+    pub origin_period: OriginPeriod,
+    /// Earlier development-age label identifying the link-ratio interval.
+    pub from_development_age: DevelopmentAge,
+    /// Required business or actuarial reason for the exclusion.
+    pub rationale: String,
+}
+
+/// Explicit selected-factor replacement for one development interval.
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, PartialEq)]
+pub struct DevelopmentFactorOverride {
+    /// Earlier development-age label identifying the factor interval.
+    pub from_development_age: DevelopmentAge,
+    /// Positive finite factor to select instead of the calculated factor.
+    pub factor: f64,
+    /// Required business or actuarial reason for the override.
+    pub rationale: String,
+}
+
+/// User-supplied assumptions applied during development-factor selection.
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct DevelopmentFactorSelectionAssumptions {
+    /// Individual observed link ratios to omit before aggregation.
+    pub exclusions: Vec<LinkRatioExclusion>,
+    /// Calculated interval factors to replace after aggregation.
+    pub overrides: Vec<DevelopmentFactorOverride>,
+}
+
+/// One exclusion that was matched to an observed link ratio and applied.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AppliedLinkRatioExclusion {
+    /// Complete source diagnostic for the omitted link ratio.
+    pub link_ratio: LinkRatio,
+    /// Business or actuarial reason supplied with the exclusion.
+    pub rationale: String,
+}
+
 /// Selected age-to-age development factor and its supporting diagnostics.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SelectedDevelopmentFactor {
     /// Zero-based column position of the factor denominator.
     pub from_development_index: usize,
@@ -29,6 +71,8 @@ pub struct SelectedDevelopmentFactor {
     pub method: DevelopmentFactorMethod,
     /// Number of observed origin rows included in the selection.
     pub observation_count: usize,
+    /// Observed link ratios omitted from this interval before aggregation.
+    pub exclusions: Vec<AppliedLinkRatioExclusion>,
     /// Method-specific numerator used to calculate the selected factor.
     ///
     /// This is the sum of later cumulative values for volume weighting and the
@@ -39,8 +83,114 @@ pub struct SelectedDevelopmentFactor {
     /// This is the sum of earlier cumulative values for volume weighting and
     /// the observation count for simple average.
     pub denominator: f64,
-    /// Selected age-to-age development factor.
+    /// Factor calculated from the included observations before any override.
+    pub calculated_factor: f64,
+    /// Override applied after calculation, including its required rationale.
+    pub applied_override: Option<DevelopmentFactorOverride>,
+    /// Final selected age-to-age development factor.
     pub factor: f64,
+}
+
+/// Select development factors with explicit exclusions and overrides.
+///
+/// Exclusions are matched by origin-period and earlier development-age labels
+/// and are applied before the selected method aggregates observations.
+/// Overrides are matched by earlier development-age label and are applied after
+/// the calculated factor is validated. Every assumption must match the
+/// triangle, be unique, and include a non-blank rationale. Overrides must also
+/// be positive and finite. Excluding every observation from an interval remains
+/// an error even when an override exists.
+pub fn select_development_factors(
+    triangle: &Triangle,
+    method: DevelopmentFactorMethod,
+    assumptions: &DevelopmentFactorSelectionAssumptions,
+) -> Result<Vec<SelectedDevelopmentFactor>> {
+    if triangle.basis() != TriangleBasis::Cumulative {
+        return Err(ActuarialError::CumulativeTriangleRequired {
+            operation: method.operation_name(),
+        });
+    }
+
+    let ratios = link_ratios(triangle)?;
+    validate_assumptions(triangle, &ratios, assumptions)?;
+
+    let mut selections = Vec::with_capacity(triangle.development_ages().len().saturating_sub(1));
+
+    for (development_index, ages) in triangle.development_ages().windows(2).enumerate() {
+        let mut numerator = 0.0;
+        let mut denominator: f64 = 0.0;
+        let mut observation_count = 0;
+        let mut applied_exclusions = Vec::new();
+
+        for ratio in ratios
+            .iter()
+            .filter(|ratio| ratio.from_development_index == development_index)
+        {
+            if let Some(exclusion) = assumptions.exclusions.iter().find(|exclusion| {
+                exclusion.origin_period == ratio.origin_period
+                    && exclusion.from_development_age == ratio.from_development_age
+            }) {
+                applied_exclusions.push(AppliedLinkRatioExclusion {
+                    link_ratio: *ratio,
+                    rationale: exclusion.rationale.clone(),
+                });
+                continue;
+            }
+
+            match method {
+                DevelopmentFactorMethod::VolumeWeighted => {
+                    numerator += ratio.to_value;
+                    denominator += ratio.from_value;
+                }
+                DevelopmentFactorMethod::SimpleAverage => {
+                    numerator += ratio.ratio;
+                    denominator += 1.0;
+                }
+            }
+            observation_count += 1;
+        }
+
+        if observation_count == 0 {
+            return Err(ActuarialError::NoDevelopmentFactorObservations { development_index });
+        }
+        if !numerator.is_finite() || !denominator.is_finite() {
+            return Err(ActuarialError::NonFiniteDevelopmentFactor { development_index });
+        }
+        if method == DevelopmentFactorMethod::VolumeWeighted && denominator <= 0.0 {
+            return Err(ActuarialError::NonPositiveDevelopmentBase { development_index });
+        }
+
+        let calculated_factor = numerator / denominator;
+        if !calculated_factor.is_finite() {
+            return Err(ActuarialError::NonFiniteDevelopmentFactor { development_index });
+        }
+
+        let applied_override = assumptions
+            .overrides
+            .iter()
+            .find(|factor_override| factor_override.from_development_age == ages[0])
+            .cloned();
+        let factor = applied_override
+            .as_ref()
+            .map_or(calculated_factor, |factor_override| factor_override.factor);
+
+        selections.push(SelectedDevelopmentFactor {
+            from_development_index: development_index,
+            from_development_age: ages[0],
+            to_development_index: development_index + 1,
+            to_development_age: ages[1],
+            method,
+            observation_count,
+            exclusions: applied_exclusions,
+            numerator,
+            denominator,
+            calculated_factor,
+            applied_override,
+            factor,
+        });
+    }
+
+    Ok(selections)
 }
 
 /// Select volume-weighted development factors for every adjacent age interval.
@@ -52,58 +202,11 @@ pub struct SelectedDevelopmentFactor {
 pub fn select_volume_weighted_factors(
     triangle: &Triangle,
 ) -> Result<Vec<SelectedDevelopmentFactor>> {
-    if triangle.basis() != TriangleBasis::Cumulative {
-        return Err(ActuarialError::CumulativeTriangleRequired {
-            operation: "volume-weighted factor calculation",
-        });
-    }
-
-    let ratios = link_ratios(triangle)?;
-    let mut selections = Vec::with_capacity(triangle.development_ages().len().saturating_sub(1));
-
-    for (development_index, ages) in triangle.development_ages().windows(2).enumerate() {
-        let mut numerator = 0.0;
-        let mut denominator: f64 = 0.0;
-        let mut observation_count = 0;
-
-        for ratio in ratios
-            .iter()
-            .filter(|ratio| ratio.from_development_index == development_index)
-        {
-            numerator += ratio.to_value;
-            denominator += ratio.from_value;
-            observation_count += 1;
-        }
-
-        if observation_count == 0 {
-            return Err(ActuarialError::NoDevelopmentFactorObservations { development_index });
-        }
-        if !numerator.is_finite() || !denominator.is_finite() {
-            return Err(ActuarialError::NonFiniteDevelopmentFactor { development_index });
-        }
-        if denominator <= 0.0 {
-            return Err(ActuarialError::NonPositiveDevelopmentBase { development_index });
-        }
-
-        let factor = numerator / denominator;
-        if !factor.is_finite() {
-            return Err(ActuarialError::NonFiniteDevelopmentFactor { development_index });
-        }
-
-        selections.push(SelectedDevelopmentFactor {
-            from_development_index: development_index,
-            from_development_age: ages[0],
-            to_development_index: development_index + 1,
-            to_development_age: ages[1],
-            method: DevelopmentFactorMethod::VolumeWeighted,
-            observation_count,
-            numerator,
-            denominator,
-            factor,
-        });
-    }
-
-    Ok(selections)
+    select_development_factors(
+        triangle,
+        DevelopmentFactorMethod::VolumeWeighted,
+        &DevelopmentFactorSelectionAssumptions::default(),
+    )
 }
 
 /// Select simple-average development factors for every adjacent age interval.
@@ -115,62 +218,91 @@ pub fn select_volume_weighted_factors(
 pub fn select_simple_average_factors(
     triangle: &Triangle,
 ) -> Result<Vec<SelectedDevelopmentFactor>> {
-    if triangle.basis() != TriangleBasis::Cumulative {
-        return Err(ActuarialError::CumulativeTriangleRequired {
-            operation: "simple-average factor calculation",
-        });
+    select_development_factors(
+        triangle,
+        DevelopmentFactorMethod::SimpleAverage,
+        &DevelopmentFactorSelectionAssumptions::default(),
+    )
+}
+
+impl DevelopmentFactorMethod {
+    const fn operation_name(self) -> &'static str {
+        match self {
+            Self::VolumeWeighted => "volume-weighted factor calculation",
+            Self::SimpleAverage => "simple-average factor calculation",
+        }
+    }
+}
+
+fn validate_assumptions(
+    triangle: &Triangle,
+    ratios: &[LinkRatio],
+    assumptions: &DevelopmentFactorSelectionAssumptions,
+) -> Result<()> {
+    for (index, exclusion) in assumptions.exclusions.iter().enumerate() {
+        if exclusion.rationale.trim().is_empty() {
+            return Err(ActuarialError::EmptyLinkRatioExclusionRationale {
+                origin_period: exclusion.origin_period,
+                from_development_age: exclusion.from_development_age,
+            });
+        }
+        if assumptions.exclusions[..index].iter().any(|candidate| {
+            candidate.origin_period == exclusion.origin_period
+                && candidate.from_development_age == exclusion.from_development_age
+        }) {
+            return Err(ActuarialError::DuplicateLinkRatioExclusion {
+                origin_period: exclusion.origin_period,
+                from_development_age: exclusion.from_development_age,
+            });
+        }
+        if !ratios.iter().any(|ratio| {
+            ratio.origin_period == exclusion.origin_period
+                && ratio.from_development_age == exclusion.from_development_age
+        }) {
+            return Err(ActuarialError::UnknownLinkRatioExclusion {
+                origin_period: exclusion.origin_period,
+                from_development_age: exclusion.from_development_age,
+            });
+        }
     }
 
-    let ratios = link_ratios(triangle)?;
-    let mut selections = Vec::with_capacity(triangle.development_ages().len().saturating_sub(1));
-
-    for (development_index, ages) in triangle.development_ages().windows(2).enumerate() {
-        let mut ratio_sum = 0.0;
-        let mut denominator: f64 = 0.0;
-        let mut observation_count = 0;
-
-        for ratio in ratios
+    let valid_override_ages =
+        &triangle.development_ages()[..triangle.development_ages().len().saturating_sub(1)];
+    for (index, factor_override) in assumptions.overrides.iter().enumerate() {
+        if factor_override.rationale.trim().is_empty() {
+            return Err(ActuarialError::EmptyDevelopmentFactorOverrideRationale {
+                from_development_age: factor_override.from_development_age,
+            });
+        }
+        if !factor_override.factor.is_finite() || factor_override.factor <= 0.0 {
+            return Err(ActuarialError::InvalidDevelopmentFactorOverride {
+                from_development_age: factor_override.from_development_age,
+            });
+        }
+        if assumptions.overrides[..index]
             .iter()
-            .filter(|ratio| ratio.from_development_index == development_index)
+            .any(|candidate| candidate.from_development_age == factor_override.from_development_age)
         {
-            ratio_sum += ratio.ratio;
-            denominator += 1.0;
-            observation_count += 1;
+            return Err(ActuarialError::DuplicateDevelopmentFactorOverride {
+                from_development_age: factor_override.from_development_age,
+            });
         }
-
-        if observation_count == 0 {
-            return Err(ActuarialError::NoDevelopmentFactorObservations { development_index });
+        if !valid_override_ages.contains(&factor_override.from_development_age) {
+            return Err(ActuarialError::UnknownDevelopmentFactorOverride {
+                from_development_age: factor_override.from_development_age,
+            });
         }
-
-        if !ratio_sum.is_finite() || !denominator.is_finite() {
-            return Err(ActuarialError::NonFiniteDevelopmentFactor { development_index });
-        }
-
-        let factor = ratio_sum / denominator;
-        if !factor.is_finite() {
-            return Err(ActuarialError::NonFiniteDevelopmentFactor { development_index });
-        }
-
-        selections.push(SelectedDevelopmentFactor {
-            from_development_index: development_index,
-            from_development_age: ages[0],
-            to_development_index: development_index + 1,
-            to_development_age: ages[1],
-            method: DevelopmentFactorMethod::SimpleAverage,
-            observation_count,
-            numerator: ratio_sum,
-            denominator,
-            factor,
-        });
     }
 
-    Ok(selections)
+    Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        select_simple_average_factors, select_volume_weighted_factors, DevelopmentFactorMethod,
+        select_development_factors, select_simple_average_factors, select_volume_weighted_factors,
+        DevelopmentFactorMethod, DevelopmentFactorOverride, DevelopmentFactorSelectionAssumptions,
+        LinkRatioExclusion,
     };
     use crate::{ActuarialError, DevelopmentAge, OriginPeriod, Triangle, TriangleBasis};
 
@@ -206,6 +338,9 @@ mod tests {
         assert_eq!(factors[0].observation_count, 2);
         assert_close(factors[0].numerator, 390.0);
         assert_close(factors[0].denominator, 220.0);
+        assert_close(factors[0].calculated_factor, 390.0 / 220.0);
+        assert!(factors[0].exclusions.is_empty());
+        assert!(factors[0].applied_override.is_none());
         assert_close(factors[0].factor, 390.0 / 220.0);
 
         assert_eq!(factors[1].from_development_age, DevelopmentAge(24));
@@ -295,6 +430,9 @@ mod tests {
         assert_eq!(factors[0].observation_count, 2);
         assert_close(factors[0].numerator, 2.0 + 1.0);
         assert_close(factors[0].denominator, 2.0);
+        assert_close(factors[0].calculated_factor, 1.5);
+        assert!(factors[0].exclusions.is_empty());
+        assert!(factors[0].applied_override.is_none());
         assert_close(factors[0].factor, 1.5);
 
         assert_eq!(factors[1].method, DevelopmentFactorMethod::SimpleAverage);
@@ -371,6 +509,267 @@ mod tests {
                 .expect_err("overflowed ratio sum must be rejected"),
             ActuarialError::NonFiniteDevelopmentFactor {
                 development_index: 0
+            }
+        );
+    }
+
+    #[test]
+    fn applies_exclusions_before_calculation_and_overrides_afterward() {
+        let triangle = Triangle::new(
+            vec![OriginPeriod(2020), OriginPeriod(2021), OriginPeriod(2022)],
+            vec![DevelopmentAge(12), DevelopmentAge(24)],
+            vec![
+                vec![Some(100.0), Some(200.0)],
+                vec![Some(300.0), Some(300.0)],
+                vec![Some(150.0), None],
+            ],
+            TriangleBasis::Cumulative,
+        )
+        .expect("adjusted factor-selection triangle should be valid");
+        let assumptions = DevelopmentFactorSelectionAssumptions {
+            exclusions: vec![LinkRatioExclusion {
+                origin_period: OriginPeriod(2020),
+                from_development_age: DevelopmentAge(12),
+                rationale: "One-time claim settlement distorted development".to_owned(),
+            }],
+            overrides: vec![DevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(12),
+                factor: 1.25,
+                rationale: "Selected actuarial judgment".to_owned(),
+            }],
+        };
+
+        let factors = select_development_factors(
+            &triangle,
+            DevelopmentFactorMethod::VolumeWeighted,
+            &assumptions,
+        )
+        .expect("valid exclusions and overrides should be applied");
+
+        assert_eq!(factors.len(), 1);
+        assert_eq!(factors[0].observation_count, 1);
+        assert_close(factors[0].numerator, 300.0);
+        assert_close(factors[0].denominator, 300.0);
+        assert_close(factors[0].calculated_factor, 1.0);
+        assert_close(factors[0].factor, 1.25);
+        assert_eq!(factors[0].exclusions.len(), 1);
+        assert_eq!(
+            factors[0].exclusions[0].link_ratio.origin_period,
+            OriginPeriod(2020)
+        );
+        assert_close(factors[0].exclusions[0].link_ratio.ratio, 2.0);
+        assert_eq!(
+            factors[0].exclusions[0].rationale,
+            "One-time claim settlement distorted development"
+        );
+        assert_eq!(
+            factors[0]
+                .applied_override
+                .as_ref()
+                .expect("override diagnostic should be retained")
+                .rationale,
+            "Selected actuarial judgment"
+        );
+    }
+
+    #[test]
+    fn rejects_exclusion_without_rationale() {
+        let triangle = Triangle::from_rows(vec![vec![Some(100.0), Some(200.0)]], true)
+            .expect("assumption-validation triangle should be valid");
+        let assumptions = DevelopmentFactorSelectionAssumptions {
+            exclusions: vec![LinkRatioExclusion {
+                origin_period: OriginPeriod(0),
+                from_development_age: DevelopmentAge(0),
+                rationale: " ".to_owned(),
+            }],
+            overrides: Vec::new(),
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &assumptions,
+            )
+            .expect_err("exclusion rationale is required"),
+            ActuarialError::EmptyLinkRatioExclusionRationale {
+                origin_period: OriginPeriod(0),
+                from_development_age: DevelopmentAge(0),
+            }
+        );
+    }
+
+    #[test]
+    fn rejects_unknown_or_duplicate_exclusions() {
+        let triangle = Triangle::from_rows(vec![vec![Some(100.0), Some(200.0)]], true)
+            .expect("assumption-validation triangle should be valid");
+        let unknown = DevelopmentFactorSelectionAssumptions {
+            exclusions: vec![LinkRatioExclusion {
+                origin_period: OriginPeriod(99),
+                from_development_age: DevelopmentAge(0),
+                rationale: "Known data issue".to_owned(),
+            }],
+            overrides: Vec::new(),
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &unknown,
+            )
+            .expect_err("an exclusion must match an observed ratio"),
+            ActuarialError::UnknownLinkRatioExclusion {
+                origin_period: OriginPeriod(99),
+                from_development_age: DevelopmentAge(0),
+            }
+        );
+
+        let exclusion = LinkRatioExclusion {
+            origin_period: OriginPeriod(0),
+            from_development_age: DevelopmentAge(0),
+            rationale: "Known data issue".to_owned(),
+        };
+        let duplicate = DevelopmentFactorSelectionAssumptions {
+            exclusions: vec![exclusion.clone(), exclusion],
+            overrides: Vec::new(),
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &duplicate,
+            )
+            .expect_err("an exclusion cannot be duplicated"),
+            ActuarialError::DuplicateLinkRatioExclusion {
+                origin_period: OriginPeriod(0),
+                from_development_age: DevelopmentAge(0),
+            }
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_or_unmatched_overrides() {
+        let triangle = Triangle::from_rows(vec![vec![Some(100.0), Some(200.0)]], true)
+            .expect("assumption-validation triangle should be valid");
+        let invalid = DevelopmentFactorSelectionAssumptions {
+            exclusions: Vec::new(),
+            overrides: vec![DevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(0),
+                factor: 0.0,
+                rationale: "Selected actuarial judgment".to_owned(),
+            }],
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &invalid,
+            )
+            .expect_err("an override factor must be positive"),
+            ActuarialError::InvalidDevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(0),
+            }
+        );
+
+        let unknown = DevelopmentFactorSelectionAssumptions {
+            exclusions: Vec::new(),
+            overrides: vec![DevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(99),
+                factor: 1.25,
+                rationale: "Selected actuarial judgment".to_owned(),
+            }],
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &unknown,
+            )
+            .expect_err("an override must match an interval"),
+            ActuarialError::UnknownDevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(99),
+            }
+        );
+    }
+
+    #[test]
+    fn rejects_override_without_rationale_or_with_duplicate_interval() {
+        let triangle = Triangle::from_rows(vec![vec![Some(100.0), Some(200.0)]], true)
+            .expect("assumption-validation triangle should be valid");
+        let without_rationale = DevelopmentFactorSelectionAssumptions {
+            exclusions: Vec::new(),
+            overrides: vec![DevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(0),
+                factor: 1.25,
+                rationale: String::new(),
+            }],
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &without_rationale,
+            )
+            .expect_err("override rationale is required"),
+            ActuarialError::EmptyDevelopmentFactorOverrideRationale {
+                from_development_age: DevelopmentAge(0),
+            }
+        );
+
+        let factor_override = DevelopmentFactorOverride {
+            from_development_age: DevelopmentAge(0),
+            factor: 1.25,
+            rationale: "Selected actuarial judgment".to_owned(),
+        };
+        let duplicate = DevelopmentFactorSelectionAssumptions {
+            exclusions: Vec::new(),
+            overrides: vec![factor_override.clone(), factor_override],
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &duplicate,
+            )
+            .expect_err("an interval override cannot be duplicated"),
+            ActuarialError::DuplicateDevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(0),
+            }
+        );
+    }
+
+    #[test]
+    fn rejects_excluding_every_observation_from_an_interval() {
+        let triangle = Triangle::from_rows(vec![vec![Some(100.0), Some(200.0)]], true)
+            .expect("assumption-validation triangle should be valid");
+        let assumptions = DevelopmentFactorSelectionAssumptions {
+            exclusions: vec![LinkRatioExclusion {
+                origin_period: OriginPeriod(0),
+                from_development_age: DevelopmentAge(0),
+                rationale: "Known data issue".to_owned(),
+            }],
+            overrides: vec![DevelopmentFactorOverride {
+                from_development_age: DevelopmentAge(0),
+                factor: 1.25,
+                rationale: "Selected actuarial judgment".to_owned(),
+            }],
+        };
+
+        assert_eq!(
+            select_development_factors(
+                &triangle,
+                DevelopmentFactorMethod::VolumeWeighted,
+                &assumptions,
+            )
+            .expect_err("an override does not replace all observations"),
+            ActuarialError::NoDevelopmentFactorObservations {
+                development_index: 0,
             }
         );
     }
