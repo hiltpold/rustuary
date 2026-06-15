@@ -33,7 +33,10 @@ Planned objects:
 
 ## Column mapping
 
-The Python layer accepts user-specific dataframe schemas and maps them into Rustuary canonical contracts before calling Rust.
+The Python layer accepts pandas, Polars, PyArrow, or record-sequence inputs and
+converts them to a PyArrow table. Dataframe indexes are not treated as claims
+columns. Column mapping then adapts user-specific schemas into Rustuary
+canonical contracts before calling Rust.
 
 ```python
 triangle = ry.Triangle.from_frame(

@@ -3,6 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, overload
 
+import pyarrow as pa
+
+from ._dataframe import to_arrow_table
 from .mapping import ClaimsMapping, DevelopmentUnit, MappingValue
 
 
@@ -15,13 +18,13 @@ _UNSET = _Unset()
 
 @dataclass(frozen=True)
 class Triangle:
-    """Python-side triangle placeholder.
+    """Python-side triangle input with source data stored as a PyArrow table.
 
-    This class will normalize pandas, polars, or pyarrow inputs before calling
-    the Rust engine. It intentionally avoids duplicating actuarial formulas.
+    Canonical claims-field normalization happens after dataframe conversion.
+    This class intentionally avoids duplicating actuarial formulas.
     """
 
-    data: Any
+    data: pa.Table
     origin: str
     development: str
     value: str
@@ -138,7 +141,7 @@ class Triangle:
             )
 
         return cls(
-            data=data,
+            data=to_arrow_table(data),
             origin=resolved_mapping.origin,
             development=resolved_mapping.development,
             value=resolved_mapping.value,

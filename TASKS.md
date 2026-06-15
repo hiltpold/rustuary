@@ -9,7 +9,7 @@ Goal: allow actuaries to load their own dataframe columns while keeping the Rust
 - [x] Define Python `ClaimsMapping` and `ExposureMapping` objects.
 - [x] Implement `Triangle.from_frame(data, *, origin, development, value, cumulative, ...)` convenience API.
 - [x] Implement `Triangle.from_frame(data, mapping=ClaimsMapping(...))` reusable API.
-- [ ] Accept pandas, Polars, and PyArrow inputs by converting to a canonical PyArrow table.
+- [x] Accept pandas, Polars, and PyArrow inputs by converting to a canonical PyArrow table.
 - [ ] Normalize claims input into canonical fields from `contracts/DATA_CONTRACTS.md`.
 - [ ] Add validation errors that reference both source and canonical column names.
 - [ ] Persist mapping metadata in `ReserveResult.audit_trail()` or model-run metadata placeholder.

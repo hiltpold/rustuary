@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "mypy"]
+dev = ["pytest", "ruff", "mypy", "pandas>=2", "polars>=1"]
 pandas = ["pandas>=2"]
 polars = ["polars>=1"]
 excel = ["openpyxl>=3"]

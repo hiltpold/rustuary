@@ -1,4 +1,5 @@
 import pytest
+import pyarrow as pa
 
 from rustuary import ClaimsMapping, Triangle
 
@@ -14,6 +15,10 @@ def test_triangle_from_frame_stores_required_mapping():
     assert triangle.origin == "accident_year"
     assert triangle.development == "development_month"
     assert triangle.value == "paid"
+    assert isinstance(triangle.data, pa.Table)
+    assert triangle.data.to_pylist() == [
+        {"accident_year": 2024, "development_month": 12, "paid": 100.0}
+    ]
 
 
 def test_triangle_from_frame_stores_complete_mapping():
@@ -33,7 +38,7 @@ def test_triangle_from_frame_stores_complete_mapping():
         development_unit="months",
     )
 
-    assert triangle.data is claims
+    assert triangle.data.to_pylist() == claims
     assert triangle.cumulative == "is_cumulative"
     assert triangle.portfolio == "segment"
     assert triangle.valuation_date == {"const": "2026-12-31"}
@@ -71,7 +76,7 @@ def test_triangle_from_frame_accepts_reusable_mapping():
 
     triangle = Triangle.from_frame(claims, mapping=mapping)
 
-    assert triangle.data is claims
+    assert triangle.data.to_pylist() == claims
     assert triangle.origin == mapping.origin
     assert triangle.development == mapping.development
     assert triangle.value == mapping.value
@@ -99,3 +104,105 @@ def test_triangle_from_frame_reports_all_missing_required_named_fields():
 def test_triangle_from_frame_rejects_wrong_mapping_type():
     with pytest.raises(TypeError, match="mapping must be a ClaimsMapping"):
         Triangle.from_frame([], mapping="claims")
+
+
+def test_triangle_from_frame_preserves_pyarrow_table():
+    table = pa.table({"AY": [2024], "dev_month": [12], "paid_loss": [100.0]})
+
+    triangle = Triangle.from_frame(
+        table,
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+    )
+
+    assert triangle.data is table
+
+
+def test_triangle_from_frame_converts_pyarrow_record_batch():
+    batch = pa.record_batch(
+        [[2024], [12], [100.0]],
+        names=["AY", "dev_month", "paid_loss"],
+    )
+
+    triangle = Triangle.from_frame(
+        batch,
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+    )
+
+    assert isinstance(triangle.data, pa.Table)
+    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+
+
+def test_triangle_from_frame_converts_pyarrow_record_batch_reader():
+    schema = pa.schema(
+        [
+            ("AY", pa.int64()),
+            ("dev_month", pa.int64()),
+            ("paid_loss", pa.float64()),
+        ]
+    )
+    reader = pa.RecordBatchReader.from_batches(
+        schema,
+        [
+            pa.record_batch(
+                [[2024], [12], [100.0]],
+                schema=schema,
+            )
+        ],
+    )
+
+    triangle = Triangle.from_frame(
+        reader,
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+    )
+
+    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+
+
+def test_triangle_from_frame_converts_pandas_dataframe_without_index():
+    pandas = pytest.importorskip("pandas")
+    frame = pandas.DataFrame(
+        {"AY": [2024], "dev_month": [12], "paid_loss": [100.0]},
+        index=["row-1"],
+    )
+
+    triangle = Triangle.from_frame(
+        frame,
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+    )
+
+    assert triangle.data.column_names == ["AY", "dev_month", "paid_loss"]
+    assert triangle.data.schema.metadata is None
+    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+
+
+def test_triangle_from_frame_converts_polars_dataframe():
+    polars = pytest.importorskip("polars")
+    frame = polars.DataFrame({"AY": [2024], "dev_month": [12], "paid_loss": [100.0]})
+
+    triangle = Triangle.from_frame(
+        frame,
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+    )
+
+    assert isinstance(triangle.data, pa.Table)
+    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+
+
+def test_triangle_from_frame_rejects_unsupported_data():
+    with pytest.raises(TypeError, match="data must be"):
+        Triangle.from_frame(
+            object(),
+            origin="AY",
+            development="dev_month",
+            value="paid_loss",
+        )

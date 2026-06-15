@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- PyArrow table conversion for pandas, Polars, PyArrow, and record-sequence triangle inputs.
 - Reusable `ClaimsMapping` support in `Triangle.from_frame`.
 - Expanded `Triangle.from_frame` named mapping parameters to cover the complete claims column-mapping contract.
 - Frozen Python `ClaimsMapping` and `ExposureMapping` objects for reusable canonical column mapping configuration.
