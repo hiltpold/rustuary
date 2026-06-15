@@ -35,8 +35,13 @@ Planned objects:
 
 The Python layer accepts pandas, Polars, PyArrow, or record-sequence inputs and
 converts them to a PyArrow table. Dataframe indexes are not treated as claims
-columns. Column mapping then adapts user-specific schemas into Rustuary
-canonical contracts before calling Rust.
+columns. Column mapping then selects and renames source fields into canonical
+claims columns such as `origin_period`, `development_age`, `amount`, and
+`is_cumulative`. Unmapped source columns are not retained.
+
+Those four calculation fields are always present. Context fields such as
+`portfolio_id`, `valuation_date`, `measure`, and `currency` are included when
+their mappings are supplied.
 
 ```python
 triangle = ry.Triangle.from_frame(
@@ -71,6 +76,9 @@ triangle = ry.Triangle.from_frame(claims, mapping=mapping)
 ```
 
 Use either `mapping=` or the individual named mapping fields in a call, not both.
+For optional fields, a string matching an input column reads that column;
+otherwise the string is treated as a constant. Use `{"const": value}` to force
+a constant when an input column has the same name.
 
 Mapping belongs in the Python adapter, CLI, backend import job, and UI import wizard. The Rust core receives canonical validated inputs only.
 

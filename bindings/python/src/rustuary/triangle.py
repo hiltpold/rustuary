@@ -5,6 +5,7 @@ from typing import Any, overload
 
 import pyarrow as pa
 
+from ._claims import normalize_claims_table
 from ._dataframe import to_arrow_table
 from .mapping import ClaimsMapping, DevelopmentUnit, MappingValue
 
@@ -18,10 +19,11 @@ _UNSET = _Unset()
 
 @dataclass(frozen=True)
 class Triangle:
-    """Python-side triangle input with source data stored as a PyArrow table.
+    """Python-side triangle input stored with canonical PyArrow field names.
 
-    Canonical claims-field normalization happens after dataframe conversion.
-    This class intentionally avoids duplicating actuarial formulas.
+    Source dataframe columns are converted to Arrow and normalized through the
+    supplied claims mapping. This class intentionally avoids duplicating
+    actuarial formulas.
     """
 
     data: pa.Table
@@ -84,7 +86,8 @@ class Triangle:
 
         Pass either ``mapping=ClaimsMapping(...)`` or the required ``origin``,
         ``development``, and ``value`` fields. The two forms cannot be mixed.
-        Dataframe normalization is performed by a later adapter stage.
+        Supported dataframe inputs are converted to Arrow and normalized to
+        canonical claims fields before the triangle is returned.
         """
         named_arguments = {
             "origin": origin,
@@ -140,8 +143,10 @@ class Triangle:
                 ),
             )
 
+        source_table = to_arrow_table(data)
+
         return cls(
-            data=to_arrow_table(data),
+            data=normalize_claims_table(source_table, resolved_mapping),
             origin=resolved_mapping.origin,
             development=resolved_mapping.development,
             value=resolved_mapping.value,

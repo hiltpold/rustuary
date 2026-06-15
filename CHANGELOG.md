@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Canonical claims-field normalization for mapped `Triangle` inputs.
 - PyArrow table conversion for pandas, Polars, PyArrow, and record-sequence triangle inputs.
 - Reusable `ClaimsMapping` support in `Triangle.from_frame`.
 - Expanded `Triangle.from_frame` named mapping parameters to cover the complete claims column-mapping contract.

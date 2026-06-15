@@ -32,6 +32,17 @@ For Python convenience, plain scalar constants are also allowed:
 ry.ClaimsMapping(measure="paid", valuation_date="2026-12-31")
 ```
 
+Python resolves optional string mappings deterministically:
+
+- If the string matches an input column, it is treated as a source column.
+- Otherwise, it is treated as a constant.
+- Use `{"const": value}` to force constant interpretation when a source column
+  has the same name.
+
+The Python triangle adapter always emits `origin_period`, `development_age`,
+`amount`, and `is_cumulative`. It includes mapped context fields such as
+`portfolio_id`, `valuation_date`, `measure`, and `currency` when supplied.
+
 ## ExposureMapping
 
 | Field | Type | Required | Description |

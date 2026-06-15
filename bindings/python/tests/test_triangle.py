@@ -17,12 +17,24 @@ def test_triangle_from_frame_stores_required_mapping():
     assert triangle.value == "paid"
     assert isinstance(triangle.data, pa.Table)
     assert triangle.data.to_pylist() == [
-        {"accident_year": 2024, "development_month": 12, "paid": 100.0}
+        {
+            "origin_period": 2024,
+            "development_age": 12,
+            "amount": 100.0,
+            "is_cumulative": True,
+        }
     ]
 
 
 def test_triangle_from_frame_stores_complete_mapping():
-    claims = [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+    claims = [
+        {
+            "AY": 2024,
+            "dev_month": 12,
+            "paid_loss": 100.0,
+            "is_cumulative": True,
+        }
+    ]
 
     triangle = Triangle.from_frame(
         claims,
@@ -38,7 +50,18 @@ def test_triangle_from_frame_stores_complete_mapping():
         development_unit="months",
     )
 
-    assert triangle.data.to_pylist() == claims
+    assert triangle.data.to_pylist() == [
+        {
+            "portfolio_id": "segment",
+            "valuation_date": "2026-12-31",
+            "origin_period": 2024,
+            "development_age": 12,
+            "measure": "paid",
+            "amount": 100.0,
+            "currency": "CHF",
+            "is_cumulative": True,
+        }
+    ]
     assert triangle.cumulative == "is_cumulative"
     assert triangle.portfolio == "segment"
     assert triangle.valuation_date == {"const": "2026-12-31"}
@@ -76,7 +99,18 @@ def test_triangle_from_frame_accepts_reusable_mapping():
 
     triangle = Triangle.from_frame(claims, mapping=mapping)
 
-    assert triangle.data.to_pylist() == claims
+    assert triangle.data.to_pylist() == [
+        {
+            "portfolio_id": "segment",
+            "valuation_date": "2026-12-31",
+            "origin_period": 2024,
+            "development_age": 12,
+            "measure": "paid",
+            "amount": 100.0,
+            "currency": "CHF",
+            "is_cumulative": True,
+        }
+    ]
     assert triangle.origin == mapping.origin
     assert triangle.development == mapping.development
     assert triangle.value == mapping.value
@@ -106,7 +140,7 @@ def test_triangle_from_frame_rejects_wrong_mapping_type():
         Triangle.from_frame([], mapping="claims")
 
 
-def test_triangle_from_frame_preserves_pyarrow_table():
+def test_triangle_from_frame_normalizes_pyarrow_table():
     table = pa.table({"AY": [2024], "dev_month": [12], "paid_loss": [100.0]})
 
     triangle = Triangle.from_frame(
@@ -116,7 +150,12 @@ def test_triangle_from_frame_preserves_pyarrow_table():
         value="paid_loss",
     )
 
-    assert triangle.data is table
+    assert triangle.data.column_names == [
+        "origin_period",
+        "development_age",
+        "amount",
+        "is_cumulative",
+    ]
 
 
 def test_triangle_from_frame_converts_pyarrow_record_batch():
@@ -133,7 +172,14 @@ def test_triangle_from_frame_converts_pyarrow_record_batch():
     )
 
     assert isinstance(triangle.data, pa.Table)
-    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+    assert triangle.data.to_pylist() == [
+        {
+            "origin_period": 2024,
+            "development_age": 12,
+            "amount": 100.0,
+            "is_cumulative": True,
+        }
+    ]
 
 
 def test_triangle_from_frame_converts_pyarrow_record_batch_reader():
@@ -161,7 +207,14 @@ def test_triangle_from_frame_converts_pyarrow_record_batch_reader():
         value="paid_loss",
     )
 
-    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+    assert triangle.data.to_pylist() == [
+        {
+            "origin_period": 2024,
+            "development_age": 12,
+            "amount": 100.0,
+            "is_cumulative": True,
+        }
+    ]
 
 
 def test_triangle_from_frame_converts_pandas_dataframe_without_index():
@@ -178,9 +231,21 @@ def test_triangle_from_frame_converts_pandas_dataframe_without_index():
         value="paid_loss",
     )
 
-    assert triangle.data.column_names == ["AY", "dev_month", "paid_loss"]
+    assert triangle.data.column_names == [
+        "origin_period",
+        "development_age",
+        "amount",
+        "is_cumulative",
+    ]
     assert triangle.data.schema.metadata is None
-    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+    assert triangle.data.to_pylist() == [
+        {
+            "origin_period": 2024,
+            "development_age": 12,
+            "amount": 100.0,
+            "is_cumulative": True,
+        }
+    ]
 
 
 def test_triangle_from_frame_converts_polars_dataframe():
@@ -195,7 +260,14 @@ def test_triangle_from_frame_converts_polars_dataframe():
     )
 
     assert isinstance(triangle.data, pa.Table)
-    assert triangle.data.to_pylist() == [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}]
+    assert triangle.data.to_pylist() == [
+        {
+            "origin_period": 2024,
+            "development_age": 12,
+            "amount": 100.0,
+            "is_cumulative": True,
+        }
+    ]
 
 
 def test_triangle_from_frame_rejects_unsupported_data():
@@ -205,4 +277,111 @@ def test_triangle_from_frame_rejects_unsupported_data():
             origin="AY",
             development="dev_month",
             value="paid_loss",
+        )
+
+
+def test_triangle_from_frame_normalizes_source_columns_and_drops_extras():
+    claims = pa.table(
+        {
+            "segment": ["Motor"],
+            "valuation_dt": ["2026-12-31"],
+            "AY": [2024],
+            "dev_month": [12],
+            "loss_type": ["paid"],
+            "paid_loss": [100.0],
+            "currency_code": ["CHF"],
+            "cumulative_flag": [True],
+            "unused": ["drop me"],
+        }
+    )
+
+    triangle = Triangle.from_frame(
+        claims,
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+        cumulative="cumulative_flag",
+        portfolio="segment",
+        valuation_date="valuation_dt",
+        measure="loss_type",
+        currency="currency_code",
+    )
+
+    assert triangle.data.column_names == [
+        "portfolio_id",
+        "valuation_date",
+        "origin_period",
+        "development_age",
+        "measure",
+        "amount",
+        "currency",
+        "is_cumulative",
+    ]
+    assert triangle.data.to_pylist() == [
+        {
+            "portfolio_id": "Motor",
+            "valuation_date": "2026-12-31",
+            "origin_period": 2024,
+            "development_age": 12,
+            "measure": "paid",
+            "amount": 100.0,
+            "currency": "CHF",
+            "is_cumulative": True,
+        }
+    ]
+
+
+def test_triangle_from_frame_materializes_plain_scalar_constants():
+    triangle = Triangle.from_frame(
+        [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}],
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+        portfolio="Motor",
+        valuation_date="2026-12-31",
+        measure="paid",
+        currency="CHF",
+    )
+
+    assert triangle.data.to_pylist() == [
+        {
+            "portfolio_id": "Motor",
+            "valuation_date": "2026-12-31",
+            "origin_period": 2024,
+            "development_age": 12,
+            "measure": "paid",
+            "amount": 100.0,
+            "currency": "CHF",
+            "is_cumulative": True,
+        }
+    ]
+
+
+def test_triangle_from_frame_explicit_constant_overrides_matching_source_column():
+    triangle = Triangle.from_frame(
+        [
+            {
+                "AY": 2024,
+                "dev_month": 12,
+                "paid_loss": 100.0,
+                "measure": "incurred",
+            }
+        ],
+        origin="AY",
+        development="dev_month",
+        value="paid_loss",
+        measure={"const": "paid"},
+    )
+
+    assert triangle.data["measure"].to_pylist() == ["paid"]
+
+
+def test_triangle_from_frame_rejects_malformed_constant_mapping():
+    with pytest.raises(ValueError, match="only a `const` field"):
+        Triangle.from_frame(
+            [{"AY": 2024, "dev_month": 12, "paid_loss": 100.0}],
+            origin="AY",
+            development="dev_month",
+            value="paid_loss",
+            measure={"value": "paid"},
         )

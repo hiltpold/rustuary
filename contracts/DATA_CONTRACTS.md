@@ -110,6 +110,9 @@ Rules:
 
 - Rust core methods consume canonical `Triangle`, `Exposure`, and assumption types only.
 - Python, CLI, backend import jobs, and UI import wizards may apply column mappings.
+- Python optional string mappings use a matching input column when present and
+  otherwise materialize the string as a constant. `{"const": value}` always
+  means a constant.
 - Mapping must be included in model-run metadata when it affects a persisted run.
 - Mapping errors must be reported using user column names and canonical field names.
 - Mapped data must be validated before calculation.
