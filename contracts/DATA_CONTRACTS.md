@@ -44,6 +44,12 @@ Negative incremental values are valid because recoveries and corrections may
 reduce cumulative claims. Conversion fails if floating-point arithmetic would
 produce a non-finite value.
 
+Latest-diagonal extraction returns one entry per origin period in origin-axis
+order. Each entry includes the origin period, development age, their zero-based
+matrix indices, and the latest observed value. The value remains in the
+triangle's current basis; callers requiring cumulative latest values must
+convert the triangle first.
+
 ## Exposure input
 
 | Field | Type | Required | Notes |

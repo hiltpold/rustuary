@@ -23,15 +23,16 @@ impl ChainLadder {
     pub fn fit_predict(&self, triangle: &Triangle) -> Result<ChainLadderResult> {
         let age_to_age_factors = volume_weighted_factors(triangle)?;
         let cdfs = cumulative_development_factors(&age_to_age_factors, self.tail_factor);
-        let mut origins = Vec::with_capacity(triangle.row_count());
+        let latest_diagonal = triangle.latest_diagonal()?;
+        let mut origins = Vec::with_capacity(latest_diagonal.len());
 
-        for origin_index in 0..triangle.row_count() {
-            let (latest_development_index, latest_observed) =
-                triangle.latest_observed(origin_index)?;
+        for latest in latest_diagonal {
+            let latest_development_index = latest.development_index;
+            let latest_observed = latest.value;
             let cdf_to_ultimate = cdfs[latest_development_index];
             let ultimate = latest_observed * cdf_to_ultimate;
             origins.push(OriginChainLadderResult {
-                origin_index,
+                origin_index: latest.origin_index,
                 latest_development_index,
                 latest_observed,
                 cdf_to_ultimate,

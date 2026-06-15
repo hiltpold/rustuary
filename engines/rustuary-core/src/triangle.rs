@@ -11,6 +11,21 @@ pub enum TriangleBasis {
     Incremental,
 }
 
+/// Latest observed cell for one origin period.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LatestDiagonalEntry {
+    /// Zero-based row position in the triangle matrix.
+    pub origin_index: usize,
+    /// Business origin-period label for the row.
+    pub origin_period: OriginPeriod,
+    /// Zero-based column position of the latest observed cell.
+    pub development_index: usize,
+    /// Business development-age label for the latest observed cell.
+    pub development_age: DevelopmentAge,
+    /// Latest observed amount in the triangle's current basis.
+    pub value: f64,
+}
+
 /// Canonical dense triangle for one homogeneous claims data slice.
 ///
 /// Origin periods label rows and development ages label columns. Both axes are
@@ -187,25 +202,40 @@ impl Triangle {
         })
     }
 
-    /// Return the latest observed development index and value for one row.
-    pub fn latest_observed(&self, row: usize) -> Result<(usize, f64)> {
-        if row >= self.row_count() {
+    /// Return the latest observed cell for one origin row.
+    ///
+    /// The value remains in the triangle's current basis. Call
+    /// [`Triangle::to_cumulative`] before extraction when a cumulative latest
+    /// diagonal is required.
+    pub fn latest_observed(&self, origin_index: usize) -> Result<LatestDiagonalEntry> {
+        let Some(origin_period) = self.origin_periods.get(origin_index).copied() else {
             return Err(ActuarialError::OriginIndexOutOfBounds {
-                origin_index: row,
+                origin_index,
                 row_count: self.row_count(),
             });
-        }
+        };
 
-        for col in (0..self.col_count()).rev() {
-            if let Some(value) = self.get(row, col) {
-                return Ok((col, value));
+        for (development_index, development_age) in
+            self.development_ages.iter().copied().enumerate().rev()
+        {
+            if let Some(value) = self.get(origin_index, development_index) {
+                return Ok(LatestDiagonalEntry {
+                    origin_index,
+                    origin_period,
+                    development_index,
+                    development_age,
+                    value,
+                });
             }
         }
-        Err(ActuarialError::NoObservedValue { origin_index: row })
+        Err(ActuarialError::NoObservedValue { origin_index })
     }
 
-    /// Return the latest observed development index and value for every row.
-    pub fn latest_diagonal(&self) -> Result<Vec<(usize, f64)>> {
+    /// Return the latest observed cell for every origin period.
+    ///
+    /// Entries retain the triangle's origin and development labels and are
+    /// ordered by the triangle's origin-period axis.
+    pub fn latest_diagonal(&self) -> Result<Vec<LatestDiagonalEntry>> {
         (0..self.row_count())
             .map(|row| self.latest_observed(row))
             .collect()
@@ -293,6 +323,14 @@ fn validate_rows(rows: &[Vec<Option<f64>>], development_count: usize) -> Result<
 mod tests {
     use super::{Triangle, TriangleBasis};
     use crate::{ActuarialError, DevelopmentAge, OriginPeriod};
+
+    fn assert_close(actual: f64, expected: f64) {
+        let difference = (actual - expected).abs();
+        assert!(
+            difference <= 1e-9,
+            "actual={actual}, expected={expected}, difference={difference}"
+        );
+    }
 
     fn canonical_triangle() -> Triangle {
         Triangle::new(
@@ -593,17 +631,57 @@ mod tests {
     fn returns_latest_observed_by_row() {
         let triangle = canonical_triangle();
 
-        assert_eq!(
-            triangle
-                .latest_observed(0)
-                .expect("first row has observations"),
-            (2, 180.0)
-        );
-        assert_eq!(
-            triangle
-                .latest_observed(1)
-                .expect("second row has observations"),
-            (1, 160.0)
-        );
+        let first = triangle
+            .latest_observed(0)
+            .expect("first row has observations");
+        assert_eq!(first.origin_index, 0);
+        assert_eq!(first.origin_period, OriginPeriod(2020));
+        assert_eq!(first.development_index, 2);
+        assert_eq!(first.development_age, DevelopmentAge(36));
+        assert_close(first.value, 180.0);
+
+        let second = triangle
+            .latest_observed(1)
+            .expect("second row has observations");
+        assert_eq!(second.origin_index, 1);
+        assert_eq!(second.origin_period, OriginPeriod(2021));
+        assert_eq!(second.development_index, 1);
+        assert_eq!(second.development_age, DevelopmentAge(24));
+        assert_close(second.value, 160.0);
+    }
+
+    #[test]
+    fn extracts_typed_latest_diagonal_in_origin_order() {
+        let triangle = canonical_triangle();
+
+        let diagonal = triangle
+            .latest_diagonal()
+            .expect("validated rows have latest observations");
+
+        assert_eq!(diagonal.len(), 2);
+        assert_eq!(diagonal[0].origin_period, OriginPeriod(2020));
+        assert_eq!(diagonal[0].development_age, DevelopmentAge(36));
+        assert_close(diagonal[0].value, 180.0);
+        assert_eq!(diagonal[1].origin_period, OriginPeriod(2021));
+        assert_eq!(diagonal[1].development_age, DevelopmentAge(24));
+        assert_close(diagonal[1].value, 160.0);
+    }
+
+    #[test]
+    fn latest_diagonal_preserves_incremental_basis_values() {
+        let incremental = Triangle::new(
+            vec![OriginPeriod(2020)],
+            vec![DevelopmentAge(12), DevelopmentAge(24)],
+            vec![vec![Some(100.0), Some(50.0)]],
+            TriangleBasis::Incremental,
+        )
+        .expect("incremental test triangle should be valid");
+
+        let latest = incremental
+            .latest_diagonal()
+            .expect("validated row has a latest observation");
+
+        assert_eq!(latest[0].development_age, DevelopmentAge(24));
+        assert_close(latest[0].value, 50.0);
     }
 }

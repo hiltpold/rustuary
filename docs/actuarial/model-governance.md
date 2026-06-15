@@ -63,6 +63,7 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 | Date | Change | Impact | Validation |
 |---|---|---|---|
+| 2026-06-15 | Added typed latest-diagonal extraction | Exposes origin and development labels for the last observed cell without changing values or basis | Unit and golden tests with `1e-9` absolute tolerance |
 | 2026-06-15 | Added cumulative/incremental triangle conversion | Deterministic row-wise basis conversion; no reserve selection change | Unit and golden round-trip tests with `1e-9` absolute tolerance |
 | 2026-06-14 | Initial governance scaffold | No production model impact | Documentation only |
 

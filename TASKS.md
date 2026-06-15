@@ -22,7 +22,7 @@ Goal: one reliable deterministic calculation path.
 
 - [x] Finalize canonical Rust `Triangle` domain type.
 - [x] Add cumulative/incremental conversion.
-- [ ] Add latest diagonal extraction.
+- [x] Add latest diagonal extraction.
 - [ ] Add link-ratio calculation.
 - [ ] Add volume-weighted development factor selection.
 - [ ] Add simple-average development factor selection.
