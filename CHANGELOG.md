@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Source- and canonical-aware `ColumnMappingError` messages for invalid claims mappings.
 - Canonical claims-field normalization for mapped `Triangle` inputs.
 - PyArrow table conversion for pandas, Polars, PyArrow, and record-sequence triangle inputs.
 - Reusable `ClaimsMapping` support in `Triangle.from_frame`.

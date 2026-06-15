@@ -11,7 +11,7 @@ Goal: allow actuaries to load their own dataframe columns while keeping the Rust
 - [x] Implement `Triangle.from_frame(data, mapping=ClaimsMapping(...))` reusable API.
 - [x] Accept pandas, Polars, and PyArrow inputs by converting to a canonical PyArrow table.
 - [x] Normalize claims input into canonical fields from `contracts/DATA_CONTRACTS.md`.
-- [ ] Add validation errors that reference both source and canonical column names.
+- [x] Add validation errors that reference both source and canonical column names.
 - [ ] Persist mapping metadata in `ReserveResult.audit_trail()` or model-run metadata placeholder.
 - [ ] Add `notebooks/01_chain_ladder_workbench.ipynb` for actuary review sessions.
 - [ ] Add example custom-column CSV and YAML mapping fixture.

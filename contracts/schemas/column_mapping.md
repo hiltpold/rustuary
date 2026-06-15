@@ -43,6 +43,10 @@ The Python triangle adapter always emits `origin_period`, `development_age`,
 `amount`, and `is_cumulative`. It includes mapped context fields such as
 `portfolio_id`, `valuation_date`, `measure`, and `currency` when supplied.
 
+Required source columns must resolve to exactly one input column. Missing or
+duplicate columns raise `ColumnMappingError` with the source column, canonical
+field, and available input columns.
+
 ## ExposureMapping
 
 | Field | Type | Required | Description |

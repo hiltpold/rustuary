@@ -1,7 +1,7 @@
 import pytest
 import pyarrow as pa
 
-from rustuary import ClaimsMapping, Triangle
+from rustuary import ClaimsMapping, ColumnMappingError, Triangle
 
 
 def test_triangle_from_frame_stores_required_mapping():
@@ -385,3 +385,88 @@ def test_triangle_from_frame_rejects_malformed_constant_mapping():
             value="paid_loss",
             measure={"value": "paid"},
         )
+
+
+@pytest.mark.parametrize(
+    ("mapping_field", "source_column", "canonical_field"),
+    [
+        ("origin", "AY", "origin_period"),
+        ("development", "dev_month", "development_age"),
+        ("value", "paid_loss", "amount"),
+        ("cumulative", "cumulative_flag", "is_cumulative"),
+    ],
+)
+def test_triangle_from_frame_reports_source_and_canonical_for_missing_columns(
+    mapping_field,
+    source_column,
+    canonical_field,
+):
+    mapping = {
+        "origin": "origin",
+        "development": "development",
+        "value": "value",
+        "cumulative": True,
+    }
+    mapping[mapping_field] = source_column
+
+    with pytest.raises(ColumnMappingError) as exc_info:
+        Triangle.from_frame(
+            [{"origin": 2024, "development": 12, "value": 100.0}],
+            **mapping,
+        )
+
+    error = exc_info.value
+    assert error.source_column == source_column
+    assert error.canonical_field == canonical_field
+    assert error.available_columns == ("origin", "development", "value")
+    assert f"canonical field `{canonical_field}`" in str(error)
+    assert f"source column `{source_column}`" in str(error)
+    assert "Available columns: origin, development, value." in str(error)
+
+
+def test_triangle_from_frame_reports_ambiguous_source_column():
+    claims = pa.Table.from_arrays(
+        [
+            pa.array([2024]),
+            pa.array([2025]),
+            pa.array([12]),
+            pa.array([100.0]),
+        ],
+        names=["AY", "AY", "dev_month", "paid_loss"],
+    )
+
+    with pytest.raises(ColumnMappingError, match="appears 2 times") as exc_info:
+        Triangle.from_frame(
+            claims,
+            origin="AY",
+            development="dev_month",
+            value="paid_loss",
+        )
+
+    assert exc_info.value.canonical_field == "origin_period"
+    assert exc_info.value.source_column == "AY"
+
+
+def test_triangle_from_frame_reports_ambiguous_optional_source_column():
+    claims = pa.Table.from_arrays(
+        [
+            pa.array(["Motor"]),
+            pa.array(["Property"]),
+            pa.array([2024]),
+            pa.array([12]),
+            pa.array([100.0]),
+        ],
+        names=["segment", "segment", "AY", "dev_month", "paid_loss"],
+    )
+
+    with pytest.raises(ColumnMappingError, match="appears 2 times") as exc_info:
+        Triangle.from_frame(
+            claims,
+            origin="AY",
+            development="dev_month",
+            value="paid_loss",
+            portfolio="segment",
+        )
+
+    assert exc_info.value.canonical_field == "portfolio_id"
+    assert exc_info.value.source_column == "segment"

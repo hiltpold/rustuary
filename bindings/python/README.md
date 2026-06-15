@@ -80,6 +80,10 @@ For optional fields, a string matching an input column reads that column;
 otherwise the string is treated as a constant. Use `{"const": value}` to force
 a constant when an input column has the same name.
 
+Missing or duplicate required source columns raise `ColumnMappingError`. The
+error identifies both the source column and canonical field and lists the input
+columns available for correction.
+
 Mapping belongs in the Python adapter, CLI, backend import job, and UI import wizard. The Rust core receives canonical validated inputs only.
 
 Exposure mappings use the same source-column or constant convention:
