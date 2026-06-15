@@ -98,13 +98,21 @@ claims_mapping:
   development: dev_month
   value: paid_loss
   portfolio: segment
-  valuation_date: valuation_dt
-  measure: paid
+  valuation_date:
+    const: 2026-12-31
+  measure:
+    const: paid
   cumulative: true
-  currency: CHF
+  currency:
+    const: CHF
   origin_type: accident_year
   development_unit: months
 ```
+
+The executable example pair is
+[`data/examples/paid_claims_custom_columns.csv`](../data/examples/paid_claims_custom_columns.csv)
+and
+[`contracts/examples/claims_mapping.yaml`](examples/claims_mapping.yaml).
 
 Rules:
 

@@ -73,7 +73,7 @@ triangle = ry.Triangle.from_frame(
 )
 ```
 
-For reusable workflows, use a mapping object or YAML config:
+For reusable workflows, use a mapping object:
 
 ```python
 mapping = ry.ClaimsMapping(
@@ -87,6 +87,20 @@ mapping = ry.ClaimsMapping(
 )
 
 triangle = ry.Triangle.from_frame(claims, mapping=mapping)
+```
+
+The repository example keeps the same mapping in a reviewable YAML file. Install
+the `yaml` extra and load it with a safe YAML parser:
+
+```python
+from pathlib import Path
+
+import yaml
+
+mapping_document = yaml.safe_load(
+    Path("contracts/examples/claims_mapping.yaml").read_text()
+)
+mapping = ry.ClaimsMapping(**mapping_document["claims_mapping"])
 ```
 
 Use either `mapping=` or the individual named mapping fields in a call, not both.

@@ -9,9 +9,7 @@ WORKBENCH_PATH = REPO_ROOT / "notebooks" / "01_chain_ladder_workbench.ipynb"
 def test_chain_ladder_workbench_executes_current_public_api(monkeypatch):
     notebook = json.loads(WORKBENCH_PATH.read_text())
     code_cells = [
-        "".join(cell["source"])
-        for cell in notebook["cells"]
-        if cell["cell_type"] == "code"
+        "".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"
     ]
     code = "\n".join(code_cells)
 
@@ -19,6 +17,7 @@ def test_chain_ladder_workbench_executes_current_public_api(monkeypatch):
     assert "ry.ChainLadder(" not in code
     assert "ry.ClaimsMapping(" in code
     assert "ry.Triangle.from_frame(" in code
+    assert "yaml.safe_load(" in code
 
     monkeypatch.chdir(REPO_ROOT / "notebooks")
     namespace = {"__name__": "__main__"}
@@ -27,4 +26,7 @@ def test_chain_ladder_workbench_executes_current_public_api(monkeypatch):
 
     triangle = namespace["triangle"]
     assert triangle.data.num_rows == 6
+    assert namespace["mapping_path"] == (
+        REPO_ROOT / "contracts" / "examples" / "claims_mapping.yaml"
+    )
     assert namespace["model_run_metadata"]["claims_mapping"]["currency"] == {"const": "CHF"}

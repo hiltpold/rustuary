@@ -14,7 +14,7 @@ Goal: allow actuaries to load their own dataframe columns while keeping the Rust
 - [x] Add validation errors that reference both source and canonical column names.
 - [x] Persist mapping metadata in `ReserveResult.audit_trail()` or model-run metadata placeholder.
 - [x] Add `notebooks/01_chain_ladder_workbench.ipynb` for actuary review sessions.
-- [ ] Add example custom-column CSV and YAML mapping fixture.
+- [x] Add example custom-column CSV and YAML mapping fixture.
 
 ## Slice 1 — Rust chain ladder core
 

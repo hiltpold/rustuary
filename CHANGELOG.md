@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Validated custom-column paid claims CSV and matching YAML mapping fixtures.
 - Executable chain-ladder input-review notebook for custom-column claims mapping and audit metadata.
 - JSON-safe `ModelRunMetadata` mapping snapshots on canonical Python triangles.
 - Source- and canonical-aware `ColumnMappingError` messages for invalid claims mappings.
