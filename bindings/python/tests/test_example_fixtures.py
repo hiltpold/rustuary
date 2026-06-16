@@ -2,7 +2,7 @@ from datetime import date
 from pathlib import Path
 
 import pyarrow.csv as pv
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from rustuary import ClaimsMapping, Triangle
 

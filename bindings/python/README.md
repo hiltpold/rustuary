@@ -30,6 +30,13 @@ Available objects:
 - `ExposureMapping`
 - `ModelRunMetadata`
 
+Internal binding:
+
+- `rustuary._rust.chain_ladder(...)` accepts canonical dense triangle axes and
+  rows, delegates calculation to `rustuary-core`, and returns plain Python
+  diagnostics. It is intentionally low-level; business users should use the
+  public `ChainLadder` wrapper once implemented.
+
 Planned objects:
 
 - `Exposure`

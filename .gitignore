@@ -6,6 +6,7 @@
 
 # Rust
 /target/
+bindings/python/rust/target/
 # Commit Cargo.lock for this application monorepo when it is generated.
 
 # Python
@@ -13,6 +14,7 @@
 __pycache__/
 *.pyc
 *.pyo
+bindings/python/src/rustuary/_rust*.so
 *.egg-info/
 dist/
 build/
