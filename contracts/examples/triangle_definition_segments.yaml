@@ -1,0 +1,23 @@
+triangle_definition:
+  triangle_definition_id: paid-by-reserving-class-country-channel-coverage
+  schema_version: "1"
+  portfolio_id: reservingClass
+  segments:
+    - name: country
+      source: country
+    - name: channel
+      source: channel
+    - name: coverage
+      source: coverage
+  origin: accidentYear
+  development: developmentMonth
+  value: paidLoss
+  measure:
+    const: paid
+  cumulative: true
+  valuation_date:
+    const: 2026-12-31
+  currency:
+    const: CHF
+  origin_type: accident_year
+  development_unit: months

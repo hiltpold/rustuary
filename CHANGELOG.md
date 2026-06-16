@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- TriangleDefinition contract language for `portfolio_id`, ordered segments, and derived display paths.
 - Shared chain-ladder golden fixture coverage with documented `1e-9` absolute tolerance policy.
 - Chain-ladder origin diagnostics for latest observed values, CDF components, ultimates, and reserves.
 - Typed CDF diagnostics by development age, including remaining factor product and tail factor.

@@ -5,7 +5,8 @@ Target physical format: Parquet.
 | Column | Type | Notes |
 |---|---|---|
 | model_run_id | string | Stable run ID |
-| portfolio_id | string | Portfolio or segment |
+| portfolio_id | string | Main reserving class / actuarial reserving unit |
+| segments | json/string | Optional ordered drill-down dimensions used to build the triangle |
 | valuation_date | date | Valuation date |
 | origin_period | string | Accident/underwriting/report year or period |
 | method | string | Candidate or selected method label |

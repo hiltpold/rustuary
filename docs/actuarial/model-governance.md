@@ -80,6 +80,12 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 When input data uses non-canonical column names, the mapping from source columns to canonical fields is part of the model-run evidence. A reserving result is not reproducible unless the mapping, input source, canonical schema version, assumptions, engine version, and validation report are retained.
 
+Every persisted triangle must be traceable to the `TriangleDefinition` that
+produced it. That evidence includes the main `portfolio_id` reserving class,
+ordered segment definitions, source mapping rules, measure, valuation context,
+and validation report. Display paths are derived from `portfolio_id` plus
+ordered segment values and are not independent canonical input.
+
 The Python `Triangle` preserves the mapping and canonical schema version in a
 model-run metadata placeholder. Workflow-owned evidence such as source hashes,
 assumption versions, engine versions, and validation reports must be added

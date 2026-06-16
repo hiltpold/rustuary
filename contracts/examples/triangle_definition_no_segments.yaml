@@ -1,0 +1,18 @@
+triangle_definition:
+  triangle_definition_id: paid-total-reserving-class
+  schema_version: "1"
+  portfolio_id:
+    const: totalReservingClass
+  segments: []
+  origin: accidentYear
+  development: developmentMonth
+  value: paidLoss
+  measure:
+    const: paid
+  cumulative: true
+  valuation_date:
+    const: 2026-12-31
+  currency:
+    const: CHF
+  origin_type: accident_year
+  development_unit: months

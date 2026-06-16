@@ -10,7 +10,8 @@ Preferred input format for claims data:
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `portfolio_id` | string | yes | Reserving segment or portfolio. |
+| `portfolio_id` | string | yes | Main reserving class / actuarial reserving unit. |
+| `segments` | ordered object/array | no | Optional ordered drill-down dimensions below `portfolio_id`; order is defined by `TriangleDefinition`. |
 | `valuation_date` | date | yes | Date of the run or data cut. |
 | `origin_period` | string/int/date | yes | Accident year, underwriting year, report year, etc. |
 | `development_age` | int | yes | Development age in months or agreed unit. |
@@ -33,6 +34,18 @@ slice before constructing the Rust `Triangle`. The core representation contains:
 
 Portfolio, valuation date, measure, and currency remain workflow context for the
 homogeneous slice rather than being repeated in every dense matrix cell.
+
+The canonical grouping convention for building a homogeneous triangle is:
+
+```text
+portfolio_id + ordered segment values + measure
+```
+
+`portfolio_id` is the main reserving class / actuarial reserving unit.
+`segments` are optional ordered drill-down dimensions below `portfolio_id`.
+`segment_path` is not a required or canonical input field. Display paths are
+derived from `portfolio_id` and the ordered segment values defined in the
+`TriangleDefinition`.
 
 Basis conversion is row-wise and preserves the canonical axes and trailing
 unobserved cells:
@@ -92,7 +105,8 @@ factor.
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `portfolio_id` | string | yes | Must align with claims. |
+| `portfolio_id` | string | yes | Must align with the claims reserving class / actuarial reserving unit. |
+| `segments` | ordered object/array | no | Must align with claims when exposure is segmented. |
 | `valuation_date` | date | yes | Must align with claims. |
 | `origin_period` | string/int/date | yes | Must align with triangle origin. |
 | `exposure_measure` | string | yes | `earned_premium`, `onlevel_premium`, `policy_count`, etc. |
@@ -137,7 +151,8 @@ projection arithmetic is an error.
 | Field | Type | Required | Notes |
 |---|---|---:|---|
 | `model_run_id` | string | yes | Unique run ID. |
-| `portfolio_id` | string | yes | Reserving segment. |
+| `portfolio_id` | string | yes | Main reserving class / actuarial reserving unit. |
+| `segments` | ordered object/array | no | Ordered drill-down dimensions used to build the triangle. |
 | `valuation_date` | date | yes | Run date. |
 | `origin_period` | string/int/date | yes | Origin period. |
 | `latest_observed` | decimal/float | yes | Latest cumulative value. |
@@ -156,6 +171,7 @@ The canonical claims fields remain:
 
 ```text
 portfolio_id
+segments
 valuation_date
 origin_period
 development_age
@@ -171,7 +187,9 @@ A user-facing mapping describes how external columns map into canonical fields:
 | `origin` | string | yes | Source column for accident/underwriting/report year. |
 | `development` | string | yes | Source column for development age. |
 | `value` | string | yes | Source column for claim amount/count. |
-| `portfolio` | string | no | Source column or constant portfolio value. |
+| `portfolio_id` | string/object | no | Source column or constant reserving class / actuarial reserving unit. |
+| `segments` | ordered list | no | Optional ordered segment mappings below `portfolio_id`. |
+| `portfolio` | string/object | no | Backward-compatible adapter alias for `portfolio_id`. Prefer `portfolio_id` in new contracts. |
 | `valuation_date` | string | no | Source column or constant valuation date. |
 | `measure` | string | no | Source column or constant measure, for example `paid`. |
 | `cumulative` | bool/string | yes | Constant or source column indicating cumulative vs incremental. |
@@ -186,7 +204,12 @@ claims_mapping:
   origin: AY
   development: dev_month
   value: paid_loss
-  portfolio: segment
+  portfolio_id: reservingClass
+  segments:
+    - name: country
+      source: country
+    - name: channel
+      source: channel
   valuation_date:
     const: 2026-12-31
   measure:
@@ -202,6 +225,9 @@ The executable example pair is
 [`data/examples/paid_claims_custom_columns.csv`](../data/examples/paid_claims_custom_columns.csv)
 and
 [`contracts/examples/claims_mapping.yaml`](examples/claims_mapping.yaml).
+Triangle-definition examples live under [`contracts/examples/`](examples/),
+including a reserving-class-only definition and a definition with ordered
+`country`, `channel`, and `coverage` segments.
 
 Rules:
 
