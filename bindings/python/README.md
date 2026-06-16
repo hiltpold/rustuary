@@ -26,21 +26,39 @@ triangle.model_run_metadata.to_dict()
 Available objects:
 
 - `Triangle`
+- `ChainLadder`
 - `ClaimsMapping`
 - `ExposureMapping`
 - `ModelRunMetadata`
+
+Chain ladder on a canonical dense triangle:
+
+```python
+model = ry.ChainLadder(tail_factor=1.0)
+result = model.fit_predict(
+    origin_periods=[2020, 2021, 2022],
+    development_ages=[12, 24, 36],
+    rows=[
+        [100.0, 180.0, 240.0],
+        [120.0, 210.0, None],
+        [150.0, None, None],
+    ],
+)
+
+result["origins"]
+result["selected_factors"]
+```
 
 Internal binding:
 
 - `rustuary._rust.chain_ladder(...)` accepts canonical dense triangle axes and
   rows, delegates calculation to `rustuary-core`, and returns plain Python
-  diagnostics. It is intentionally low-level; business users should use the
-  public `ChainLadder` wrapper once implemented.
+  diagnostics. It is intentionally low-level; business users should use
+  `ChainLadder`.
 
 Planned objects:
 
 - `Exposure`
-- `ChainLadder`
 - `BornhuetterFerguson`
 - `CapeCod`
 - `ExpectedLoss`
@@ -49,8 +67,8 @@ Planned objects:
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).
-It intentionally stops before reserve calculation until the public Python
-`ChainLadder` binding is implemented.
+It currently focuses on mapped input review. Wiring mapped `Triangle` objects
+directly into `ChainLadder` is tracked as a separate Slice 2 task.
 
 ## Column mapping
 

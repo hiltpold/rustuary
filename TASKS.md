@@ -93,7 +93,7 @@ Goal: one reliable deterministic calculation path.
 Goal: actuaries can run the Rust calculation from Python notebooks on an already-built canonical triangle.
 
 * [x] Add PyO3 binding for canonical chain ladder calculation.
-* [ ] Add Python `ChainLadder` class.
+* [x] Add Python `ChainLadder` class.
 * [ ] Ensure Python does not duplicate chain ladder math already implemented in Rust.
 * [ ] Accept a mapped `Triangle` created by `Triangle.from_frame(...)`.
 * [ ] Add `ReserveResult.summary()`.

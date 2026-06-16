@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Public Python `ChainLadder` class for dense canonical triangle runs.
 - Low-level PyO3 chain-ladder binding for canonical dense triangles.
 - TriangleDefinition contract language for `portfolio_id`, ordered segments, and derived display paths.
 - Shared chain-ladder golden fixture coverage with documented `1e-9` absolute tolerance policy.
