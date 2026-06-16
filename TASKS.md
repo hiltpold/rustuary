@@ -98,7 +98,7 @@ Goal: actuaries can run the Rust calculation from Python notebooks on an already
 * [x] Accept a mapped `Triangle` created by `Triangle.from_frame(...)`.
 * [x] Add `ReserveResult.summary()`.
 * [x] Add `ReserveResult.diagnostics()`.
-* [ ] Add `ReserveResult.to_arrow()`.
+* [x] Add `ReserveResult.to_arrow()`.
 * [ ] Add `ReserveResult.to_pandas()`.
 * [ ] Add `ReserveResult.audit_trail()`.
 * [ ] Preserve mapping metadata and source/canonical column names in the audit trail.

@@ -47,6 +47,7 @@ model = ry.ChainLadder(tail_factor=1.0)
 result = model.fit_predict(triangle)
 
 result.summary()
+result.to_arrow()
 result.diagnostics()["selected_factors"]
 ```
 
@@ -64,6 +65,7 @@ result = ry.ChainLadder().fit_predict(
 )
 
 result.summary()
+result.to_arrow()
 result.diagnostics()["selected_factors"]
 ```
 

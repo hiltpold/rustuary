@@ -4,9 +4,22 @@ from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any, overload
 
+import pyarrow as pa
+
 from .triangle import Triangle
 
 JsonValue = Any
+
+_SUMMARY_SCHEMA = pa.schema(
+    [
+        ("origin_period", pa.int64()),
+        ("latest_development_age", pa.int64()),
+        ("latest_observed", pa.float64()),
+        ("cdf_to_ultimate", pa.float64()),
+        ("ultimate", pa.float64()),
+        ("reserve", pa.float64()),
+    ]
+)
 
 
 def _load_rust_extension() -> Any:
@@ -73,6 +86,10 @@ class ReserveResult(Mapping[str, JsonValue]):
             "cdf_diagnostics": _copy_json_value(self._payload["cdf_diagnostics"]),
             "origin_diagnostics": _copy_json_value(self._payload["origins"]),
         }
+
+    def to_arrow(self) -> pa.Table:
+        """Return the origin-level summary as a PyArrow table."""
+        return pa.Table.from_pylist(self.summary(), schema=_SUMMARY_SCHEMA)
 
 
 @dataclass(frozen=True, slots=True)

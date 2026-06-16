@@ -1,4 +1,5 @@
 import pytest
+import pyarrow as pa
 
 import rustuary.chain_ladder as chain_ladder_module
 from rustuary import ChainLadder, ReserveResult, Triangle
@@ -191,6 +192,33 @@ def test_reserve_result_diagnostics_returns_detached_payload():
     diagnostics["selected_factors"][0]["factor"] = 999.0
 
     assert result["selected_factors"][0]["factor"] != 999.0
+
+
+def test_reserve_result_to_arrow_returns_summary_table():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021, 2022],
+        development_ages=[12, 24, 36],
+        rows=[
+            [100.0, 180.0, 240.0],
+            [120.0, 210.0, None],
+            [150.0, None, None],
+        ],
+    )
+
+    table = result.to_arrow()
+
+    assert isinstance(table, pa.Table)
+    assert table.schema == pa.schema(
+        [
+            ("origin_period", pa.int64()),
+            ("latest_development_age", pa.int64()),
+            ("latest_observed", pa.float64()),
+            ("cdf_to_ultimate", pa.float64()),
+            ("ultimate", pa.float64()),
+            ("reserve", pa.float64()),
+        ]
+    )
+    assert table.to_pylist() == result.summary()
 
 
 def test_reserve_result_to_dict_returns_detached_payload():

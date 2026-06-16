@@ -18,4 +18,5 @@ model = ry.ChainLadder(tail_factor=1.0)
 result = model.fit_predict(triangle)
 
 print(result.summary())
+print(result.to_arrow())
 print(result.diagnostics()["selected_factors"])
