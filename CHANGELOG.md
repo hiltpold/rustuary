@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Python `ChainLadder.fit_predict` support for mapped `Triangle.from_frame(...)` inputs.
 - Public Python `ChainLadder` class for dense canonical triangle runs.
 - Low-level PyO3 chain-ladder binding for canonical dense triangles.
 - TriangleDefinition contract language for `portfolio_id`, ordered segments, and derived display paths.

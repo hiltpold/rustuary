@@ -31,11 +31,28 @@ Available objects:
 - `ExposureMapping`
 - `ModelRunMetadata`
 
-Chain ladder on a canonical dense triangle:
+Chain ladder on a mapped triangle:
 
 ```python
+triangle = ry.Triangle.from_frame(
+    claims,
+    origin="AY",
+    development="dev_month",
+    value="paid_loss",
+    cumulative=True,
+)
+
 model = ry.ChainLadder(tail_factor=1.0)
-result = model.fit_predict(
+result = model.fit_predict(triangle)
+
+result["origins"]
+result["selected_factors"]
+```
+
+The lower-level dense form remains available for already-shaped triangle data:
+
+```python
+result = ry.ChainLadder().fit_predict(
     origin_periods=[2020, 2021, 2022],
     development_ages=[12, 24, 36],
     rows=[
@@ -67,8 +84,8 @@ Planned objects:
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).
-It currently focuses on mapped input review. Wiring mapped `Triangle` objects
-directly into `ChainLadder` is tracked as a separate Slice 2 task.
+It currently focuses on mapped input review and can now pass the resulting
+`Triangle` to `ChainLadder`.
 
 ## Column mapping
 
