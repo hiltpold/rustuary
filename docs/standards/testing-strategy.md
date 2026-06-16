@@ -20,7 +20,11 @@ Golden tests should include:
 
 ## Floating-point policy
 
-Use tolerances for floating-point assertions. Document whether the tolerance is absolute, relative, or both.
+Use tolerances for floating-point assertions. Rust actuarial golden tests use
+an absolute tolerance of `1e-9` and no relative tolerance unless a test states
+otherwise. Expected values should carry enough decimal precision to reproduce
+the hand calculation. If an expected value changes, document whether the change
+is a correction to the fixture or an intentional behavior change.
 
 ## Agent expectations
 

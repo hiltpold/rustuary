@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Shared chain-ladder golden fixture coverage with documented `1e-9` absolute tolerance policy.
 - Chain-ladder origin diagnostics for latest observed values, CDF components, ultimates, and reserves.
 - Typed CDF diagnostics by development age, including remaining factor product and tail factor.
 - Typed fixed tail factor interface with positive finite validation and optional rationale.

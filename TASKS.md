@@ -30,7 +30,7 @@ Goal: one reliable deterministic calculation path.
 - [x] Add fixed tail factor interface.
 - [x] Add CDF calculation including tail.
 - [x] Add chain ladder ultimate, reserve, and diagnostics.
-- [ ] Add golden fixture tests with documented tolerance policy.
+- [x] Add golden fixture tests with documented tolerance policy.
 
 ## Slice 2 — Python binding for chain ladder
 

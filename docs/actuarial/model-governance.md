@@ -63,6 +63,7 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 | Date | Change | Impact | Validation |
 |---|---|---|---|
+| 2026-06-16 | Documented golden fixture tolerance policy | No model formula change; shared chain-ladder golden fixture now covers every origin row and documents `1e-9` absolute tolerance | Fixture-backed Rust golden test |
 | 2026-06-16 | Added chain-ladder ultimate, reserve, and origin diagnostics | Origin projections now retain labels, latest observed values, CDF components, selected ultimate, reserve, and reject non-finite projection arithmetic | Unit projection validation tests and expanded golden chain-ladder diagnostics with `1e-9` absolute tolerance |
 | 2026-06-16 | Added typed CDF calculation including tail | CDFs now expose per-development-age diagnostics with remaining selected-factor product, fixed tail factor, and final CDF | Unit validation tests and golden CDF test with `1e-9` absolute tolerance |
 | 2026-06-16 | Added fixed tail factor interface | Tail assumptions are now typed, positive finite values with optional non-blank rationale retained in diagnostics; default remains `1.0` for no tail beyond final observed age | Unit validation tests and golden fixed-tail projection test with `1e-9` absolute tolerance |

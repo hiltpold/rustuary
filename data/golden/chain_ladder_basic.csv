@@ -1,2 +1,4 @@
-origin_index,latest_development_index,latest_observed,cdf_to_ultimate,ultimate,reserve
-0,2,240,1,240,0
+origin_index,origin_period,latest_development_index,latest_development_age,latest_observed,remaining_factor_product,tail_factor,cdf_to_ultimate,ultimate,reserve
+0,2020,2,36,240,1,1,1,240,0
+1,2021,1,24,210,1.3333333333333333,1,1.3333333333333333,280,70
+2,2022,0,12,150,2.3636363636363638,1,2.3636363636363638,354.54545454545456,204.54545454545456
