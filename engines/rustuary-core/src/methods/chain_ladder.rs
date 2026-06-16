@@ -3,7 +3,7 @@ use crate::methods::development_factor::{
     select_volume_weighted_factors, SelectedDevelopmentFactor,
 };
 use crate::triangle::Triangle;
-use crate::types::DevelopmentAge;
+use crate::types::{DevelopmentAge, OriginPeriod};
 
 /// Fixed multiplicative tail factor applied after the last selected age-to-age factor.
 #[derive(Debug, Clone, PartialEq)]
@@ -106,15 +106,38 @@ impl ChainLadder {
         for latest in latest_diagonal {
             let latest_development_index = latest.development_index;
             let latest_observed = latest.value;
-            let cdf_to_ultimate = cdfs[latest_development_index];
+            let cdf_diagnostic = cdf_diagnostics
+                .get(latest_development_index)
+                .copied()
+                .ok_or(ActuarialError::DevelopmentFactorAxisLengthMismatch {
+                    development_age_count: triangle.development_ages().len(),
+                    factor_count: age_to_age_factors.len(),
+                })?;
+            let cdf_to_ultimate = cdf_diagnostic.cdf;
             let ultimate = latest_observed * cdf_to_ultimate;
+            if !ultimate.is_finite() {
+                return Err(ActuarialError::NonFiniteChainLadderProjection {
+                    origin_index: latest.origin_index,
+                });
+            }
+            let reserve = ultimate - latest_observed;
+            if !reserve.is_finite() {
+                return Err(ActuarialError::NonFiniteChainLadderProjection {
+                    origin_index: latest.origin_index,
+                });
+            }
+
             origins.push(OriginChainLadderResult {
                 origin_index: latest.origin_index,
+                origin_period: latest.origin_period,
                 latest_development_index,
+                latest_development_age: latest.development_age,
                 latest_observed,
                 cdf_to_ultimate,
+                remaining_factor_product: cdf_diagnostic.remaining_factor_product,
+                tail_factor: cdf_diagnostic.tail_factor,
                 ultimate,
-                reserve: ultimate - latest_observed,
+                reserve,
             });
         }
 
@@ -169,11 +192,25 @@ pub struct CumulativeDevelopmentFactor {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OriginChainLadderResult {
+    /// Zero-based row position in the triangle matrix.
     pub origin_index: usize,
+    /// Business origin-period label for the row.
+    pub origin_period: OriginPeriod,
+    /// Zero-based column position of the latest observed cell.
     pub latest_development_index: usize,
+    /// Business development-age label of the latest observed cell.
+    pub latest_development_age: DevelopmentAge,
+    /// Latest cumulative observed amount for the origin.
     pub latest_observed: f64,
+    /// Remaining CDF from latest development age to ultimate.
     pub cdf_to_ultimate: f64,
+    /// Product of remaining selected age-to-age factors before tail.
+    pub remaining_factor_product: f64,
+    /// Fixed tail factor included in `cdf_to_ultimate`.
+    pub tail_factor: f64,
+    /// Chain-ladder selected ultimate.
     pub ultimate: f64,
+    /// Chain-ladder reserve, equal to `ultimate - latest_observed`.
     pub reserve: f64,
 }
 
@@ -452,10 +489,34 @@ mod tests {
         assert_eq!(result.cdf_diagnostics.len(), 3);
         assert_close(result.tail_factor.factor(), 1.0);
         assert_close(result.cdf_diagnostics[1].cdf, result.cdfs[1]);
+        assert_eq!(result.origins[1].origin_period, crate::OriginPeriod(1));
+        assert_eq!(result.origins[1].latest_development_age, DevelopmentAge(1));
+        assert_close(
+            result.origins[1].remaining_factor_product,
+            result.selected_factors[1].factor,
+        );
+        assert_close(result.origins[1].tail_factor, 1.0);
         assert_close(result.selected_factors[0].numerator, 390.0);
         assert_close(result.selected_factors[0].denominator, 220.0);
         assert_close(result.origins[0].ultimate, 240.0);
         assert_close(result.origins[1].ultimate, 210.0 * (240.0 / 180.0));
+    }
+
+    #[test]
+    fn rejects_non_finite_origin_projection() {
+        let triangle = Triangle::from_rows(
+            vec![vec![Some(1.0), Some(2.0)], vec![Some(f64::MAX), None]],
+            true,
+        )
+        .expect("projection-overflow triangle should be valid");
+
+        assert_eq!(
+            ChainLadder::new(1.0)
+                .expect("tail factor should be valid")
+                .fit_predict(&triangle)
+                .expect_err("overflowed ultimate must be rejected"),
+            ActuarialError::NonFiniteChainLadderProjection { origin_index: 1 }
+        );
     }
 
     #[test]

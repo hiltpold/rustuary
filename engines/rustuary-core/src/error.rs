@@ -115,6 +115,9 @@ pub enum ActuarialError {
     #[error("development column {development_index} produced a non-finite CDF")]
     NonFiniteCumulativeDevelopmentFactor { development_index: usize },
 
+    #[error("origin row {origin_index} produced a non-finite chain-ladder projection")]
+    NonFiniteChainLadderProjection { origin_index: usize },
+
     #[error(
         "link-ratio exclusion for origin {origin_period:?} and development age {from_development_age:?} requires a rationale"
     )]

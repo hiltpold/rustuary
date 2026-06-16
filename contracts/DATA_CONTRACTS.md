@@ -124,6 +124,14 @@ factor, remaining selected-factor product before tail, fixed tail factor, and
 final CDF. The final development age has no age-to-age factor and its CDF equals
 the tail factor.
 
+Chain-ladder origin projections use the latest cumulative observed value at the
+origin's latest development age. The selected ultimate is
+`latest_observed * cdf_to_ultimate`; selected reserve is
+`selected_ultimate - latest_observed`. Origin diagnostics retain the origin
+period, latest development age, latest observed value, remaining selected-factor
+product, tail factor, CDF to ultimate, ultimate, and reserve. Non-finite
+projection arithmetic is an error.
+
 ## Result output, by origin period
 
 | Field | Type | Required | Notes |
@@ -137,7 +145,7 @@ the tail factor.
 | `selected_reserve` | decimal/float | yes | Ultimate less latest observed. |
 | `selected_method` | string | yes | Method or blend label. |
 | `selection_rationale` | string | no | Human explanation. |
-| `diagnostics` | json | yes | Auditable intermediate values, including selected factors, CDF diagnostics, and assumptions. |
+| `diagnostics` | json | yes | Auditable intermediate values, including selected factors, CDF diagnostics, origin projection diagnostics, and assumptions. |
 
 ## Column mapping contract
 

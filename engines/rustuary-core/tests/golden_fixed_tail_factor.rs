@@ -41,4 +41,6 @@ fn golden_fixed_tail_factor_flows_into_cdfs_and_reserves() {
     assert_close(result.cdfs[1], (240.0 / 180.0) * 1.1);
     assert_close(result.origins[0].ultimate, 240.0 * 1.1);
     assert_close(result.origins[0].reserve, 24.0);
+    assert_close(result.origins[0].remaining_factor_product, 1.0);
+    assert_close(result.origins[0].tail_factor, 1.1);
 }
