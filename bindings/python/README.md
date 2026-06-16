@@ -47,7 +47,7 @@ model = ry.ChainLadder(tail_factor=1.0)
 result = model.fit_predict(triangle)
 
 result.summary()
-result["selected_factors"]
+result.diagnostics()["selected_factors"]
 ```
 
 The lower-level dense form remains available for already-shaped triangle data:
@@ -64,7 +64,7 @@ result = ry.ChainLadder().fit_predict(
 )
 
 result.summary()
-result["selected_factors"]
+result.diagnostics()["selected_factors"]
 ```
 
 Internal binding:

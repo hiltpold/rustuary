@@ -44,8 +44,7 @@ class ReserveResult(Mapping[str, JsonValue]):
 
         The summary intentionally includes the values actuaries usually inspect
         first: latest observed amount, selected CDF to ultimate, ultimate, and
-        reserve. Detailed factor and CDF diagnostics are left in the raw payload
-        until the dedicated ``diagnostics()`` API is added.
+        reserve.
         """
         return [
             {
@@ -58,6 +57,22 @@ class ReserveResult(Mapping[str, JsonValue]):
             }
             for origin in self._payload["origins"]
         ]
+
+    def diagnostics(self) -> dict[str, JsonValue]:
+        """Return calculation diagnostics and assumptions from the Rust result."""
+        return {
+            "basis": {
+                "input": self._payload["input_basis"],
+                "calculation": self._payload["calculation_basis"],
+                "conversion_applied": self._payload["basis_conversion_applied"],
+            },
+            "tail_factor": _copy_json_value(self._payload["tail_factor"]),
+            "age_to_age_factors": _copy_json_value(self._payload["age_to_age_factors"]),
+            "selected_factors": _copy_json_value(self._payload["selected_factors"]),
+            "cdfs": _copy_json_value(self._payload["cdfs"]),
+            "cdf_diagnostics": _copy_json_value(self._payload["cdf_diagnostics"]),
+            "origin_diagnostics": _copy_json_value(self._payload["origins"]),
+        }
 
 
 @dataclass(frozen=True, slots=True)

@@ -146,6 +146,53 @@ def test_reserve_result_summary_returns_origin_level_rows():
     assert_close(summary[2]["reserve"], 204.54545454545456)
 
 
+def test_reserve_result_diagnostics_returns_calculation_details():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021, 2022],
+        development_ages=[12, 24, 36],
+        rows=[
+            [100.0, 180.0, 240.0],
+            [120.0, 210.0, None],
+            [150.0, None, None],
+        ],
+    )
+
+    diagnostics = result.diagnostics()
+
+    assert diagnostics["basis"] == {
+        "input": "cumulative",
+        "calculation": "cumulative",
+        "conversion_applied": False,
+    }
+    assert_close(diagnostics["age_to_age_factors"][0], 390.0 / 220.0)
+    assert_close(diagnostics["cdfs"][0], (390.0 / 220.0) * (240.0 / 180.0))
+    assert diagnostics["tail_factor"] == {"factor": 1.0, "rationale": None}
+    assert diagnostics["selected_factors"][0]["method"] == "volume_weighted"
+    assert diagnostics["selected_factors"][0]["observation_count"] == 2
+    assert diagnostics["cdf_diagnostics"][-1]["development_age"] == 36
+    assert diagnostics["origin_diagnostics"][2]["origin_period"] == 2022
+    assert_close(
+        diagnostics["origin_diagnostics"][2]["remaining_factor_product"],
+        (390.0 / 220.0) * (240.0 / 180.0),
+    )
+
+
+def test_reserve_result_diagnostics_returns_detached_payload():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021],
+        development_ages=[12, 24],
+        rows=[
+            [100.0, 180.0],
+            [120.0, None],
+        ],
+    )
+
+    diagnostics = result.diagnostics()
+    diagnostics["selected_factors"][0]["factor"] = 999.0
+
+    assert result["selected_factors"][0]["factor"] != 999.0
+
+
 def test_reserve_result_to_dict_returns_detached_payload():
     result = ChainLadder().fit_predict(
         origin_periods=[2020],
