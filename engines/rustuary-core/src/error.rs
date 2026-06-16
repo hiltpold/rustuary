@@ -156,6 +156,9 @@ pub enum ActuarialError {
         from_development_age: DevelopmentAge,
     },
 
-    #[error("tail factor must be positive")]
+    #[error("tail factor rationale must not be blank")]
+    EmptyTailFactorRationale,
+
+    #[error("tail factor must be positive and finite")]
     InvalidTailFactor,
 }

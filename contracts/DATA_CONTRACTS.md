@@ -111,6 +111,12 @@ factor.
 | `value` | scalar/json | yes | Assumption value. |
 | `rationale` | string | no | Human explanation. |
 
+Fixed tail factor assumptions use `name = tail_factor` and a positive finite
+scalar `value`. The Rust core exposes this as a typed fixed-tail assumption. A
+missing tail assumption defaults to `1.0`, meaning no development beyond the
+final observed age. When a rationale is supplied, it must be non-blank and is
+retained in result diagnostics.
+
 ## Result output, by origin period
 
 | Field | Type | Required | Notes |

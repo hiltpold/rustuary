@@ -27,7 +27,7 @@ Goal: one reliable deterministic calculation path.
 - [x] Add volume-weighted development factor selection.
 - [x] Add simple-average development factor selection.
 - [x] Add selected factor overrides and exclusions.
-- [ ] Add fixed tail factor interface.
+- [x] Add fixed tail factor interface.
 - [ ] Add CDF calculation including tail.
 - [ ] Add chain ladder ultimate, reserve, and diagnostics.
 - [ ] Add golden fixture tests with documented tolerance policy.

@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Typed fixed tail factor interface with positive finite validation and optional rationale.
 - Auditable selected-factor overrides and link-ratio exclusions with required rationales.
 - Typed simple-average development factor selections from individual link ratios.
 - Typed volume-weighted development factor selections with supporting aggregates.

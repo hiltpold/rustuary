@@ -12,7 +12,7 @@ Target physical format: Parquet.
 | result_kind | string | `candidate` or `selected` |
 | latest_observed | decimal/double | Latest cumulative value |
 | cdf_to_ultimate | double | Remaining CDF including tail |
-| tail_factor | double | Tail factor applied |
+| tail_factor | double | Positive finite fixed tail factor applied; rationale should be retained in diagnostics when supplied |
 | apriori_ultimate | decimal/double | Prior ultimate, where applicable |
 | ultimate | decimal/double | Estimated ultimate |
 | reserve | decimal/double | Ultimate less observed |
