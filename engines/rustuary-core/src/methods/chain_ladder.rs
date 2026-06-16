@@ -3,6 +3,7 @@ use crate::methods::development_factor::{
     select_volume_weighted_factors, SelectedDevelopmentFactor,
 };
 use crate::triangle::Triangle;
+use crate::types::DevelopmentAge;
 
 /// Fixed multiplicative tail factor applied after the last selected age-to-age factor.
 #[derive(Debug, Clone, PartialEq)]
@@ -90,7 +91,15 @@ impl ChainLadder {
             .iter()
             .map(|selection| selection.factor)
             .collect::<Vec<_>>();
-        let cdfs = cumulative_development_factors(&age_to_age_factors, &self.tail_factor);
+        let cdf_diagnostics = cumulative_development_factor_diagnostics(
+            triangle.development_ages(),
+            &age_to_age_factors,
+            &self.tail_factor,
+        )?;
+        let cdfs = cdf_diagnostics
+            .iter()
+            .map(|diagnostic| diagnostic.cdf)
+            .collect::<Vec<_>>();
         let latest_diagonal = triangle.latest_diagonal()?;
         let mut origins = Vec::with_capacity(latest_diagonal.len());
 
@@ -113,6 +122,7 @@ impl ChainLadder {
             age_to_age_factors,
             selected_factors,
             cdfs,
+            cdf_diagnostics,
             tail_factor: self.tail_factor.clone(),
             origins,
         })
@@ -132,8 +142,29 @@ pub struct ChainLadderResult {
     pub age_to_age_factors: Vec<f64>,
     pub selected_factors: Vec<SelectedDevelopmentFactor>,
     pub cdfs: Vec<f64>,
+    pub cdf_diagnostics: Vec<CumulativeDevelopmentFactor>,
     pub tail_factor: FixedTailFactor,
     pub origins: Vec<OriginChainLadderResult>,
+}
+
+/// Remaining cumulative development factor from one development age to ultimate.
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CumulativeDevelopmentFactor {
+    /// Zero-based development-age position.
+    pub development_index: usize,
+    /// Development-age label for this CDF.
+    pub development_age: DevelopmentAge,
+    /// Next development-age label, when an age-to-age factor remains.
+    pub next_development_age: Option<DevelopmentAge>,
+    /// Selected factor from this development age to the next age, if any.
+    pub age_to_age_factor: Option<f64>,
+    /// Product of remaining selected age-to-age factors, excluding tail.
+    pub remaining_factor_product: f64,
+    /// Fixed tail factor multiplied after all selected age-to-age factors.
+    pub tail_factor: f64,
+    /// CDF to ultimate, equal to `remaining_factor_product * tail_factor`.
+    pub cdf: f64,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -177,13 +208,74 @@ pub fn cumulative_development_factors(
     cdfs
 }
 
+/// Calculate typed CDF diagnostics for every development age.
+///
+/// For development age `j`, the CDF is the product of selected age-to-age
+/// factors from `j` onward multiplied by the fixed tail factor. The final
+/// development age has no age-to-age factor and therefore has a CDF equal to
+/// the tail factor.
+pub fn cumulative_development_factor_diagnostics(
+    development_ages: &[DevelopmentAge],
+    age_to_age_factors: &[f64],
+    tail_factor: &FixedTailFactor,
+) -> Result<Vec<CumulativeDevelopmentFactor>> {
+    if development_ages.is_empty() {
+        return Err(ActuarialError::EmptyDevelopmentAxis);
+    }
+    if development_ages.len() != age_to_age_factors.len() + 1 {
+        return Err(ActuarialError::DevelopmentFactorAxisLengthMismatch {
+            development_age_count: development_ages.len(),
+            factor_count: age_to_age_factors.len(),
+        });
+    }
+
+    let mut diagnostics = Vec::with_capacity(development_ages.len());
+    let mut remaining_factor_product = 1.0;
+
+    for development_index in (0..development_ages.len()).rev() {
+        if development_index < age_to_age_factors.len() {
+            let factor = age_to_age_factors[development_index];
+            if !factor.is_finite() {
+                return Err(ActuarialError::NonFiniteCumulativeDevelopmentFactor {
+                    development_index,
+                });
+            }
+            remaining_factor_product *= factor;
+            if !remaining_factor_product.is_finite() {
+                return Err(ActuarialError::NonFiniteCumulativeDevelopmentFactor {
+                    development_index,
+                });
+            }
+        }
+
+        let cdf = remaining_factor_product * tail_factor.factor();
+        if !cdf.is_finite() {
+            return Err(ActuarialError::NonFiniteCumulativeDevelopmentFactor { development_index });
+        }
+
+        diagnostics.push(CumulativeDevelopmentFactor {
+            development_index,
+            development_age: development_ages[development_index],
+            next_development_age: development_ages.get(development_index + 1).copied(),
+            age_to_age_factor: age_to_age_factors.get(development_index).copied(),
+            remaining_factor_product,
+            tail_factor: tail_factor.factor(),
+            cdf,
+        });
+    }
+
+    diagnostics.reverse();
+    Ok(diagnostics)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        cumulative_development_factors, volume_weighted_factors, ChainLadder, FixedTailFactor,
+        cumulative_development_factor_diagnostics, cumulative_development_factors,
+        volume_weighted_factors, ChainLadder, FixedTailFactor,
     };
     use crate::triangle::Triangle;
-    use crate::ActuarialError;
+    use crate::{ActuarialError, DevelopmentAge};
 
     fn assert_close(actual: f64, expected: f64) {
         let diff = (actual - expected).abs();
@@ -259,6 +351,87 @@ mod tests {
     }
 
     #[test]
+    fn computes_typed_cdf_diagnostics_with_tail() {
+        let tail_factor =
+            FixedTailFactor::new(1.1).expect("positive finite tail factor should be valid");
+
+        let diagnostics = cumulative_development_factor_diagnostics(
+            &[DevelopmentAge(12), DevelopmentAge(24), DevelopmentAge(36)],
+            &[2.0, 1.5],
+            &tail_factor,
+        )
+        .expect("CDF diagnostics should calculate");
+
+        assert_eq!(diagnostics.len(), 3);
+        assert_eq!(diagnostics[0].development_index, 0);
+        assert_eq!(diagnostics[0].development_age, DevelopmentAge(12));
+        assert_eq!(
+            diagnostics[0].next_development_age,
+            Some(DevelopmentAge(24))
+        );
+        assert_eq!(diagnostics[0].age_to_age_factor, Some(2.0));
+        assert_close(diagnostics[0].remaining_factor_product, 3.0);
+        assert_close(diagnostics[0].tail_factor, 1.1);
+        assert_close(diagnostics[0].cdf, 3.3);
+
+        assert_eq!(diagnostics[2].development_index, 2);
+        assert_eq!(diagnostics[2].development_age, DevelopmentAge(36));
+        assert_eq!(diagnostics[2].next_development_age, None);
+        assert_eq!(diagnostics[2].age_to_age_factor, None);
+        assert_close(diagnostics[2].remaining_factor_product, 1.0);
+        assert_close(diagnostics[2].cdf, 1.1);
+    }
+
+    #[test]
+    fn rejects_cdf_axis_length_mismatch() {
+        let tail_factor =
+            FixedTailFactor::new(1.0).expect("positive finite tail factor should be valid");
+
+        assert_eq!(
+            cumulative_development_factor_diagnostics(
+                &[DevelopmentAge(12), DevelopmentAge(24)],
+                &[1.5, 1.2],
+                &tail_factor,
+            )
+            .expect_err("CDF calculation needs one more development age than factor"),
+            ActuarialError::DevelopmentFactorAxisLengthMismatch {
+                development_age_count: 2,
+                factor_count: 2,
+            }
+        );
+    }
+
+    #[test]
+    fn rejects_non_finite_cdf_factor_or_product() {
+        let tail_factor =
+            FixedTailFactor::new(1.0).expect("positive finite tail factor should be valid");
+
+        assert_eq!(
+            cumulative_development_factor_diagnostics(
+                &[DevelopmentAge(12), DevelopmentAge(24)],
+                &[f64::INFINITY],
+                &tail_factor,
+            )
+            .expect_err("non-finite selected factor must be rejected"),
+            ActuarialError::NonFiniteCumulativeDevelopmentFactor {
+                development_index: 0,
+            }
+        );
+
+        assert_eq!(
+            cumulative_development_factor_diagnostics(
+                &[DevelopmentAge(12), DevelopmentAge(24), DevelopmentAge(36)],
+                &[f64::MAX, f64::MAX],
+                &tail_factor,
+            )
+            .expect_err("overflowed CDF product must be rejected"),
+            ActuarialError::NonFiniteCumulativeDevelopmentFactor {
+                development_index: 0,
+            }
+        );
+    }
+
+    #[test]
     fn projects_ultimates() {
         let triangle = Triangle::from_rows(
             vec![
@@ -276,7 +449,9 @@ mod tests {
             .unwrap();
         assert_eq!(result.origins.len(), 3);
         assert_eq!(result.selected_factors.len(), 2);
+        assert_eq!(result.cdf_diagnostics.len(), 3);
         assert_close(result.tail_factor.factor(), 1.0);
+        assert_close(result.cdf_diagnostics[1].cdf, result.cdfs[1]);
         assert_close(result.selected_factors[0].numerator, 390.0);
         assert_close(result.selected_factors[0].denominator, 220.0);
         assert_close(result.origins[0].ultimate, 240.0);

@@ -10,7 +10,8 @@ pub mod types;
 
 pub use error::{ActuarialError, Result};
 pub use methods::chain_ladder::{
-    ChainLadder, ChainLadderResult, FixedTailFactor, OriginChainLadderResult,
+    cumulative_development_factor_diagnostics, cumulative_development_factors, ChainLadder,
+    ChainLadderResult, CumulativeDevelopmentFactor, FixedTailFactor, OriginChainLadderResult,
 };
 pub use methods::development_factor::{
     select_development_factors, select_simple_average_factors, select_volume_weighted_factors,

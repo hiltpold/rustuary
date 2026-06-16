@@ -117,6 +117,13 @@ missing tail assumption defaults to `1.0`, meaning no development beyond the
 final observed age. When a rationale is supplied, it must be non-blank and is
 retained in result diagnostics.
 
+CDF diagnostics are calculated for every development age. For development age
+`j`, `cdf = product(selected_factor[j..last]) * tail_factor`. Each diagnostic
+records the development age, optional next development age, optional age-to-age
+factor, remaining selected-factor product before tail, fixed tail factor, and
+final CDF. The final development age has no age-to-age factor and its CDF equals
+the tail factor.
+
 ## Result output, by origin period
 
 | Field | Type | Required | Notes |
@@ -130,7 +137,7 @@ retained in result diagnostics.
 | `selected_reserve` | decimal/float | yes | Ultimate less latest observed. |
 | `selected_method` | string | yes | Method or blend label. |
 | `selection_rationale` | string | no | Human explanation. |
-| `diagnostics` | json | yes | Auditable intermediate values. |
+| `diagnostics` | json | yes | Auditable intermediate values, including selected factors, CDF diagnostics, and assumptions. |
 
 ## Column mapping contract
 

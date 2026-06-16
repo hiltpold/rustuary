@@ -11,11 +11,11 @@ Target physical format: Parquet.
 | method | string | Candidate or selected method label |
 | result_kind | string | `candidate` or `selected` |
 | latest_observed | decimal/double | Latest cumulative value |
-| cdf_to_ultimate | double | Remaining CDF including tail |
+| cdf_to_ultimate | double | Remaining CDF including tail, selected from the development-age CDF diagnostics |
 | tail_factor | double | Positive finite fixed tail factor applied; rationale should be retained in diagnostics when supplied |
 | apriori_ultimate | decimal/double | Prior ultimate, where applicable |
 | ultimate | decimal/double | Estimated ultimate |
 | reserve | decimal/double | Ultimate less observed |
 | weight | double | Selection/blend weight |
 | rationale | string | Actuarial rationale for selection |
-| diagnostics_json | string | Small structured diagnostic payload; large diagnostics should be separate artifact |
+| diagnostics_json | string | Small structured diagnostic payload, including CDF diagnostics; large diagnostics should be separate artifact |

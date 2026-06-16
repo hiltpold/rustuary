@@ -105,6 +105,17 @@ pub enum ActuarialError {
     NonFiniteDevelopmentFactor { development_index: usize },
 
     #[error(
+        "CDF calculation has {development_age_count} development ages but {factor_count} age-to-age factors"
+    )]
+    DevelopmentFactorAxisLengthMismatch {
+        development_age_count: usize,
+        factor_count: usize,
+    },
+
+    #[error("development column {development_index} produced a non-finite CDF")]
+    NonFiniteCumulativeDevelopmentFactor { development_index: usize },
+
+    #[error(
         "link-ratio exclusion for origin {origin_period:?} and development age {from_development_age:?} requires a rationale"
     )]
     EmptyLinkRatioExclusionRationale {
