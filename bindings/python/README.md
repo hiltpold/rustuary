@@ -30,6 +30,7 @@ Available objects:
 - `ClaimsMapping`
 - `ExposureMapping`
 - `ModelRunMetadata`
+- `ReserveResult`
 
 Chain ladder on a mapped triangle:
 
@@ -45,7 +46,7 @@ triangle = ry.Triangle.from_frame(
 model = ry.ChainLadder(tail_factor=1.0)
 result = model.fit_predict(triangle)
 
-result["origins"]
+result.summary()
 result["selected_factors"]
 ```
 
@@ -62,7 +63,7 @@ result = ry.ChainLadder().fit_predict(
     ],
 )
 
-result["origins"]
+result.summary()
 result["selected_factors"]
 ```
 
@@ -80,7 +81,6 @@ Planned objects:
 - `CapeCod`
 - `ExpectedLoss`
 - `ReservingWorkflow`
-- `ReserveResult`
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).

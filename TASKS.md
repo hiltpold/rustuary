@@ -96,7 +96,7 @@ Goal: actuaries can run the Rust calculation from Python notebooks on an already
 * [x] Add Python `ChainLadder` class.
 * [x] Ensure Python does not duplicate chain ladder math already implemented in Rust.
 * [x] Accept a mapped `Triangle` created by `Triangle.from_frame(...)`.
-* [ ] Add `ReserveResult.summary()`.
+* [x] Add `ReserveResult.summary()`.
 * [ ] Add `ReserveResult.diagnostics()`.
 * [ ] Add `ReserveResult.to_arrow()`.
 * [ ] Add `ReserveResult.to_pandas()`.

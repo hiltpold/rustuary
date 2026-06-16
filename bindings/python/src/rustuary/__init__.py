@@ -1,6 +1,6 @@
 """Business-friendly Python interface for Rustuary."""
 
-from .chain_ladder import ChainLadder
+from .chain_ladder import ChainLadder, ReserveResult
 from .errors import ColumnMappingError
 from .mapping import ClaimsMapping, ExposureMapping
 from .metadata import ModelRunMetadata
@@ -12,5 +12,6 @@ __all__ = [
     "ColumnMappingError",
     "ExposureMapping",
     "ModelRunMetadata",
+    "ReserveResult",
     "Triangle",
 ]

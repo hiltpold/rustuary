@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any, overload
 
 from .triangle import Triangle
+
+JsonValue = Any
 
 
 def _load_rust_extension() -> Any:
@@ -19,13 +21,53 @@ def _load_rust_extension() -> Any:
 
 
 @dataclass(frozen=True, slots=True)
+class ReserveResult(Mapping[str, JsonValue]):
+    """Notebook-friendly reserving result returned by actuarial models."""
+
+    _payload: dict[str, JsonValue]
+
+    def __getitem__(self, key: str) -> JsonValue:
+        return self._payload[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._payload)
+
+    def __len__(self) -> int:
+        return len(self._payload)
+
+    def to_dict(self) -> dict[str, JsonValue]:
+        """Return a detached copy of the raw result payload."""
+        return _copy_json_value(self._payload)
+
+    def summary(self) -> list[dict[str, JsonValue]]:
+        """Return origin-level chain-ladder result rows.
+
+        The summary intentionally includes the values actuaries usually inspect
+        first: latest observed amount, selected CDF to ultimate, ultimate, and
+        reserve. Detailed factor and CDF diagnostics are left in the raw payload
+        until the dedicated ``diagnostics()`` API is added.
+        """
+        return [
+            {
+                "origin_period": origin["origin_period"],
+                "latest_development_age": origin["latest_development_age"],
+                "latest_observed": origin["latest_observed"],
+                "cdf_to_ultimate": origin["cdf_to_ultimate"],
+                "ultimate": origin["ultimate"],
+                "reserve": origin["reserve"],
+            }
+            for origin in self._payload["origins"]
+        ]
+
+
+@dataclass(frozen=True, slots=True)
 class ChainLadder:
     """Actuary-facing chain-ladder model backed by the Rust core."""
 
     tail_factor: float = 1.0
 
     @overload
-    def fit_predict(self, triangle: Triangle, /) -> dict[str, Any]: ...
+    def fit_predict(self, triangle: Triangle, /) -> ReserveResult: ...
 
     @overload
     def fit_predict(
@@ -37,7 +79,7 @@ class ChainLadder:
         development_ages: Iterable[int],
         rows: Iterable[Iterable[float | int | None]],
         cumulative: bool = True,
-    ) -> dict[str, Any]: ...
+    ) -> ReserveResult: ...
 
     def fit_predict(
         self,
@@ -48,7 +90,7 @@ class ChainLadder:
         development_ages: Iterable[int] | None = None,
         rows: Iterable[Iterable[float | int | None]] | None = None,
         cumulative: bool = True,
-    ) -> dict[str, Any]:
+    ) -> ReserveResult:
         """Run chain ladder on a mapped ``Triangle`` or canonical dense axes.
 
         For mapped ``Triangle`` inputs, Python reshapes canonical long-form
@@ -66,7 +108,7 @@ class ChainLadder:
             )
 
         rust = _load_rust_extension()
-        return rust.chain_ladder(
+        payload = rust.chain_ladder(
             origin_periods=[int(period) for period in origin_periods],
             development_ages=[int(age) for age in development_ages],
             rows=[
@@ -76,6 +118,7 @@ class ChainLadder:
             cumulative=cumulative,
             tail_factor=float(self.tail_factor),
         )
+        return ReserveResult(payload)
 
 
 def _dense_from_triangle(
@@ -154,3 +197,11 @@ def _amount_value(value: Any) -> float | None:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise ValueError("Triangle data field amount must contain numeric values") from exc
+
+
+def _copy_json_value(value: JsonValue) -> JsonValue:
+    if isinstance(value, dict):
+        return {key: _copy_json_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_copy_json_value(item) for item in value]
+    return value

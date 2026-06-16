@@ -1,7 +1,7 @@
 import pytest
 
 import rustuary.chain_ladder as chain_ladder_module
-from rustuary import ChainLadder, Triangle
+from rustuary import ChainLadder, ReserveResult, Triangle
 
 
 def assert_close(actual, expected):
@@ -19,6 +19,7 @@ def test_chain_ladder_class_delegates_to_rust_core_for_dense_triangle():
         ],
     )
 
+    assert isinstance(result, ReserveResult)
     assert result["calculation_basis"] == "cumulative"
     assert_close(result["age_to_age_factors"][0], 390.0 / 220.0)
     assert_close(result["age_to_age_factors"][1], 240.0 / 180.0)
@@ -28,12 +29,12 @@ def test_chain_ladder_class_delegates_to_rust_core_for_dense_triangle():
 
 def test_chain_ladder_class_only_materializes_inputs_before_delegating(monkeypatch):
     calls = []
-    expected_result = {"result": "from rust"}
+    expected_payload = {"result": "from rust"}
 
     class FakeRust:
         def chain_ladder(self, **kwargs):
             calls.append(kwargs)
-            return expected_result
+            return expected_payload
 
     monkeypatch.setattr(chain_ladder_module, "_load_rust_extension", lambda: FakeRust())
 
@@ -44,7 +45,8 @@ def test_chain_ladder_class_only_materializes_inputs_before_delegating(monkeypat
         cumulative=False,
     )
 
-    assert result is expected_result
+    assert isinstance(result, ReserveResult)
+    assert result.to_dict() == expected_payload
     assert calls == [
         {
             "origin_periods": [2020, 2021],
@@ -73,6 +75,7 @@ def test_chain_ladder_class_accepts_mapped_triangle_from_frame():
 
     result = ChainLadder().fit_predict(triangle)
 
+    assert isinstance(result, ReserveResult)
     assert result["calculation_basis"] == "cumulative"
     assert_close(result["age_to_age_factors"][0], 390.0 / 220.0)
     assert_close(result["age_to_age_factors"][1], 240.0 / 180.0)
@@ -82,12 +85,12 @@ def test_chain_ladder_class_accepts_mapped_triangle_from_frame():
 
 def test_chain_ladder_class_reshapes_mapped_triangle_before_delegating(monkeypatch):
     calls = []
-    expected_result = {"result": "from rust"}
+    expected_payload = {"result": "from rust"}
 
     class FakeRust:
         def chain_ladder(self, **kwargs):
             calls.append(kwargs)
-            return expected_result
+            return expected_payload
 
     monkeypatch.setattr(chain_ladder_module, "_load_rust_extension", lambda: FakeRust())
     triangle = Triangle.from_frame(
@@ -104,7 +107,8 @@ def test_chain_ladder_class_reshapes_mapped_triangle_before_delegating(monkeypat
 
     result = ChainLadder(tail_factor=1.1).fit_predict(triangle)
 
-    assert result is expected_result
+    assert isinstance(result, ReserveResult)
+    assert result.to_dict() == expected_payload
     assert calls == [
         {
             "origin_periods": [2020, 2021],
@@ -114,6 +118,45 @@ def test_chain_ladder_class_reshapes_mapped_triangle_before_delegating(monkeypat
             "tail_factor": 1.1,
         }
     ]
+
+
+def test_reserve_result_summary_returns_origin_level_rows():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021, 2022],
+        development_ages=[12, 24, 36],
+        rows=[
+            [100.0, 180.0, 240.0],
+            [120.0, 210.0, None],
+            [150.0, None, None],
+        ],
+    )
+
+    summary = result.summary()
+
+    assert [row["origin_period"] for row in summary] == [2020, 2021, 2022]
+    assert [row["latest_development_age"] for row in summary] == [36, 24, 12]
+    assert_close(summary[0]["latest_observed"], 240.0)
+    assert_close(summary[0]["cdf_to_ultimate"], 1.0)
+    assert_close(summary[0]["ultimate"], 240.0)
+    assert_close(summary[0]["reserve"], 0.0)
+    assert_close(summary[1]["ultimate"], 280.0)
+    assert_close(summary[1]["reserve"], 70.0)
+    assert_close(summary[2]["cdf_to_ultimate"], (390.0 / 220.0) * (240.0 / 180.0))
+    assert_close(summary[2]["ultimate"], 354.54545454545456)
+    assert_close(summary[2]["reserve"], 204.54545454545456)
+
+
+def test_reserve_result_to_dict_returns_detached_payload():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020],
+        development_ages=[12],
+        rows=[[100.0]],
+    )
+
+    payload = result.to_dict()
+    payload["origins"][0]["reserve"] = 999.0
+
+    assert result["origins"][0]["reserve"] == 0.0
 
 
 def test_chain_ladder_class_rejects_mapped_triangle_with_duplicate_cells():

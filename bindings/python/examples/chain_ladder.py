@@ -17,4 +17,4 @@ triangle = ry.Triangle.from_frame(
 model = ry.ChainLadder(tail_factor=1.0)
 result = model.fit_predict(triangle)
 
-print(result["origins"])
+print(result.summary())

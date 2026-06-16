@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Python `ReserveResult.summary()` for origin-level latest, ultimate, and reserve output.
 - Python `ChainLadder.fit_predict` support for mapped `Triangle.from_frame(...)` inputs.
 - Public Python `ChainLadder` class for dense canonical triangle runs.
 - Low-level PyO3 chain-ladder binding for canonical dense triangles.
