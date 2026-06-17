@@ -5,6 +5,7 @@ from .errors import ColumnMappingError
 from .mapping import ClaimsMapping, ExposureMapping
 from .metadata import ModelRunMetadata
 from .triangle import Triangle
+from .triangle_builder import TriangleBuilder
 from .triangle_definition import SegmentDefinition, TriangleDefinition
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "ReserveResult",
     "SegmentDefinition",
     "Triangle",
+    "TriangleBuilder",
     "TriangleDefinition",
 ]

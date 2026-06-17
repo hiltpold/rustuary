@@ -28,6 +28,7 @@ Available objects:
 - `Triangle`
 - `TriangleDefinition`
 - `SegmentDefinition`
+- `TriangleBuilder`
 - `ChainLadder`
 - `ClaimsMapping`
 - `ExposureMapping`
@@ -88,7 +89,6 @@ Planned objects:
 - `BornhuetterFerguson`
 - `CapeCod`
 - `ExpectedLoss`
-- `TriangleBuilder`
 - `TriangleSet`
 - `ReservingWorkflow`
 
@@ -116,6 +116,16 @@ definition.to_dict()
 
 For `aggregation="sum"`, `amount` is required. For `aggregation="count"`,
 omit `amount`; each input row contributes one event to the cell count.
+
+`TriangleBuilder` validates raw claim/event frames against a
+`TriangleDefinition` before later triangle-set construction:
+
+```python
+builder = ry.TriangleBuilder(definition)
+
+builder.required_source_columns()
+builder.validate_frame(raw_claims)
+```
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).

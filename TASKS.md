@@ -118,7 +118,7 @@ Goal: build actuarial triangles from raw claim/event records, not only from pre-
 ### Core concepts
 
 * [x] Add `TriangleDefinition` concept.
-* [ ] Add `TriangleBuilder` concept.
+* [x] Add `TriangleBuilder` concept.
 * [ ] Add `TriangleSet` concept for multiple triangles built from one dataset.
 * [ ] Add `TriangleKey` or equivalent grouping key with:
 
@@ -171,13 +171,13 @@ Goal: build actuarial triangles from raw claim/event records, not only from pre-
 ### Python API
 
 * [x] Add Python `TriangleDefinition`.
-* [ ] Add Python `TriangleBuilder`.
+* [x] Add Python `TriangleBuilder`.
 * [ ] Add Python `TriangleSet`.
 * [ ] Add `TriangleBuilder.from_frame(data, definition=...)`.
 * [ ] Add `TriangleSet.keys()`.
 * [ ] Add `TriangleSet.get(...)`.
 * [ ] Add `TriangleSet.tree()` or equivalent display helper.
-* [ ] Add validation errors that reference source column names and canonical field names.
+* [x] Add validation errors that reference source column names and canonical field names.
 * [ ] Add audit metadata showing the full `TriangleDefinition`.
 
 ### Tests
