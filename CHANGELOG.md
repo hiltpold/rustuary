@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Python `ReserveResult.to_pandas()` for origin-level summary export as a pandas DataFrame.
 - Python `ReserveResult.to_arrow()` for origin-level summary export as a PyArrow table.
 - Python `ReserveResult.diagnostics()` for selected factors, CDFs, tail factor, basis, and origin diagnostics.
 - Python `ReserveResult.summary()` for origin-level latest, ultimate, and reserve output.

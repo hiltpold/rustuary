@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
+from importlib import import_module
 from typing import Any, overload
 
 import pyarrow as pa
@@ -24,7 +25,7 @@ _SUMMARY_SCHEMA = pa.schema(
 
 def _load_rust_extension() -> Any:
     try:
-        from . import _rust  # type: ignore[import-untyped]
+        from . import _rust  # type: ignore[attr-defined, import-untyped]
     except ImportError as exc:
         raise ImportError(
             "ChainLadder requires the compiled rustuary._rust extension. "
@@ -90,6 +91,18 @@ class ReserveResult(Mapping[str, JsonValue]):
     def to_arrow(self) -> pa.Table:
         """Return the origin-level summary as a PyArrow table."""
         return pa.Table.from_pylist(self.summary(), schema=_SUMMARY_SCHEMA)
+
+    def to_pandas(self) -> Any:
+        """Return the origin-level summary as a pandas DataFrame."""
+        try:
+            import_module("pandas")
+        except ImportError as exc:
+            raise ImportError(
+                "ReserveResult.to_pandas requires pandas. "
+                "Install it with the `pandas` extra: rustuary[pandas]."
+            ) from exc
+
+        return self.to_arrow().to_pandas()
 
 
 @dataclass(frozen=True, slots=True)

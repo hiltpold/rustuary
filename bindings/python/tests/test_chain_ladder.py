@@ -221,6 +221,45 @@ def test_reserve_result_to_arrow_returns_summary_table():
     assert table.to_pylist() == result.summary()
 
 
+def test_reserve_result_to_pandas_returns_summary_dataframe():
+    pandas = pytest.importorskip("pandas")
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021, 2022],
+        development_ages=[12, 24, 36],
+        rows=[
+            [100.0, 180.0, 240.0],
+            [120.0, 210.0, None],
+            [150.0, None, None],
+        ],
+    )
+
+    frame = result.to_pandas()
+
+    assert isinstance(frame, pandas.DataFrame)
+    assert list(frame.columns) == [
+        "origin_period",
+        "latest_development_age",
+        "latest_observed",
+        "cdf_to_ultimate",
+        "ultimate",
+        "reserve",
+    ]
+    assert frame.to_dict("records") == result.summary()
+
+
+def test_reserve_result_to_pandas_reports_missing_optional_dependency(monkeypatch):
+    def import_or_fail(module_name):
+        if module_name == "pandas":
+            raise ImportError("missing pandas")
+        return __import__(module_name)
+
+    monkeypatch.setattr(chain_ladder_module, "import_module", import_or_fail)
+    result = ReserveResult({})
+
+    with pytest.raises(ImportError, match=r"rustuary\[pandas\]"):
+        result.to_pandas()
+
+
 def test_reserve_result_to_dict_returns_detached_payload():
     result = ChainLadder().fit_predict(
         origin_periods=[2020],

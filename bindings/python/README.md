@@ -48,6 +48,7 @@ result = model.fit_predict(triangle)
 
 result.summary()
 result.to_arrow()
+result.to_pandas()  # requires the pandas extra
 result.diagnostics()["selected_factors"]
 ```
 
@@ -66,6 +67,7 @@ result = ry.ChainLadder().fit_predict(
 
 result.summary()
 result.to_arrow()
+result.to_pandas()  # requires the pandas extra
 result.diagnostics()["selected_factors"]
 ```
 

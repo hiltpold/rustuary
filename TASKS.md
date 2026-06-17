@@ -99,7 +99,7 @@ Goal: actuaries can run the Rust calculation from Python notebooks on an already
 * [x] Add `ReserveResult.summary()`.
 * [x] Add `ReserveResult.diagnostics()`.
 * [x] Add `ReserveResult.to_arrow()`.
-* [ ] Add `ReserveResult.to_pandas()`.
+* [x] Add `ReserveResult.to_pandas()`.
 * [ ] Add `ReserveResult.audit_trail()`.
 * [ ] Preserve mapping metadata and source/canonical column names in the audit trail.
 * [ ] Add Python tests for mapping, validation, and result shape.
