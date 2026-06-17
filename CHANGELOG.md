@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Python `TriangleDefinition` and `SegmentDefinition` objects for raw claim/event triangle build configuration.
 - Chain-ladder workbench notebook smoke test now runs the mapped custom-column triangle through `ChainLadder`.
 - Python `ReserveResult.audit_trail()` for result summaries, diagnostics, and source-to-canonical input lineage.
 - Python `ReserveResult.to_pandas()` for origin-level summary export as a pandas DataFrame.

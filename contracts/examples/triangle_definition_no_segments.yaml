@@ -4,15 +4,15 @@ triangle_definition:
   portfolio_id:
     const: totalReservingClass
   segments: []
-  origin: accidentYear
-  development: developmentMonth
-  value: paidLoss
+  origin_date: accidentDate
+  development_date: paymentDate
+  amount: paidLoss
   measure:
     const: paid
-  cumulative: true
+  aggregation: sum
+  bucket_months: 12
+  output_kind: cumulative
   valuation_date:
     const: 2026-12-31
   currency:
     const: CHF
-  origin_type: accident_year
-  development_unit: months

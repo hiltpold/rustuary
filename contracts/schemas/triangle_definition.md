@@ -15,15 +15,15 @@ and workflow services use `TriangleDefinition` before invoking the engine.
 | `schema_version` | string | yes | Version of this logical schema. |
 | `portfolio_id` | string/object | yes | Source column or constant for the main reserving class / actuarial reserving unit. |
 | `segments` | ordered list | no | Optional ordered drill-down dimensions below `portfolio_id`. Empty list means no segments. |
-| `origin` | string/object | yes | Source column or rule for canonical `origin_period`. |
-| `development` | string/object | yes | Source column or rule for canonical `development_age`. |
-| `value` | string/object | yes | Source column or rule for canonical `amount`. |
+| `origin_date` | string | yes | Source date column used to derive canonical `origin_period`. |
+| `development_date` | string | yes | Source date column used with `origin_date` to derive canonical `development_age`. |
+| `amount` | string | yes | Source amount column for canonical `amount`. |
 | `measure` | string/object | yes | Source column or constant measure such as `paid` or `incurred`. |
-| `cumulative` | bool/string/object | yes | Constant or source field for canonical `is_cumulative`. |
+| `aggregation` | string | yes | Aggregation used to build cells. MVP values: `sum`, `count`. |
+| `bucket_months` | integer | yes | Development bucket size in months, between `1` and `12`. |
+| `output_kind` | string | yes | `incremental` or `cumulative` output triangle. |
 | `valuation_date` | string/object | no | Source column or constant valuation date. |
 | `currency` | string/object | no | Source column or constant currency. Required when monetary data can cross currencies. |
-| `origin_type` | string | no | `accident_year`, `underwriting_year`, `report_year`, etc. |
-| `development_unit` | string | no | `months`, `quarters`, or `years`. |
 
 Segment entries are ordered:
 

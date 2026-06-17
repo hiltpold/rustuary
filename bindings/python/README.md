@@ -26,6 +26,8 @@ triangle.model_run_metadata.to_dict()
 Available objects:
 
 - `Triangle`
+- `TriangleDefinition`
+- `SegmentDefinition`
 - `ChainLadder`
 - `ClaimsMapping`
 - `ExposureMapping`
@@ -86,7 +88,31 @@ Planned objects:
 - `BornhuetterFerguson`
 - `CapeCod`
 - `ExpectedLoss`
+- `TriangleBuilder`
+- `TriangleSet`
 - `ReservingWorkflow`
+
+Raw claim/event triangle definitions:
+
+```python
+definition = ry.TriangleDefinition(
+    triangle_definition_id="paid-claims-v1",
+    origin_date="accident_date",
+    development_date="payment_date",
+    amount="paid_loss",
+    measure={"const": "paid"},
+    aggregation="sum",
+    bucket_months=12,
+    output_kind="cumulative",
+    portfolio_id="reserving_class",
+    segments=[
+        ry.SegmentDefinition(name="country", source="country"),
+        ry.SegmentDefinition(name="coverage", source="coverage"),
+    ],
+)
+
+definition.to_dict()
+```
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).

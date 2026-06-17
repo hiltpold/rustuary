@@ -117,7 +117,7 @@ Goal: build actuarial triangles from raw claim/event records, not only from pre-
 
 ### Core concepts
 
-* [ ] Add `TriangleDefinition` concept.
+* [x] Add `TriangleDefinition` concept.
 * [ ] Add `TriangleBuilder` concept.
 * [ ] Add `TriangleSet` concept for multiple triangles built from one dataset.
 * [ ] Add `TriangleKey` or equivalent grouping key with:
@@ -128,19 +128,19 @@ Goal: build actuarial triangles from raw claim/event records, not only from pre-
 
 ### TriangleDefinition fields
 
-* [ ] Support `origin_date`.
-* [ ] Support `development_date`.
-* [ ] Support `amount`.
-* [ ] Support `measure`.
-* [ ] Support `aggregation`.
-* [ ] Support `bucket_months`.
-* [ ] Support `output_kind`.
-* [ ] Support `portfolio_id`.
-* [ ] Support ordered `segments`.
+* [x] Support `origin_date`.
+* [x] Support `development_date`.
+* [x] Support `amount`.
+* [x] Support `measure`.
+* [x] Support `aggregation`.
+* [x] Support `bucket_months`.
+* [x] Support `output_kind`.
+* [x] Support `portfolio_id`.
+* [x] Support ordered `segments`.
 
 ### Date resolution
 
-* [ ] Validate `bucket_months` is between `1` and `12`.
+* [x] Validate `bucket_months` is between `1` and `12`.
 * [ ] Support monthly triangles with `bucket_months=1`.
 * [ ] Support quarterly triangles with `bucket_months=3`.
 * [ ] Support half-year triangles with `bucket_months=6`.
@@ -170,7 +170,7 @@ Goal: build actuarial triangles from raw claim/event records, not only from pre-
 
 ### Python API
 
-* [ ] Add Python `TriangleDefinition`.
+* [x] Add Python `TriangleDefinition`.
 * [ ] Add Python `TriangleBuilder`.
 * [ ] Add Python `TriangleSet`.
 * [ ] Add `TriangleBuilder.from_frame(data, definition=...)`.
