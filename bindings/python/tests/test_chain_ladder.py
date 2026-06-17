@@ -1,12 +1,23 @@
+import csv
+from pathlib import Path
+
 import pytest
 import pyarrow as pa
 
 import rustuary.chain_ladder as chain_ladder_module
 from rustuary import ChainLadder, ReserveResult, Triangle
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+CHAIN_LADDER_GOLDEN_PATH = REPO_ROOT / "data" / "golden" / "chain_ladder_basic.csv"
+
 
 def assert_close(actual, expected):
     assert abs(actual - expected) <= 1e-9
+
+
+def expected_basic_chain_ladder_origins():
+    with CHAIN_LADDER_GOLDEN_PATH.open(newline="") as golden_file:
+        return list(csv.DictReader(golden_file))
 
 
 def test_chain_ladder_class_delegates_to_rust_core_for_dense_triangle():
@@ -26,6 +37,39 @@ def test_chain_ladder_class_delegates_to_rust_core_for_dense_triangle():
     assert_close(result["age_to_age_factors"][1], 240.0 / 180.0)
     assert_close(result["origins"][1]["ultimate"], 280.0)
     assert_close(result["origins"][2]["reserve"], 204.54545454545456)
+
+
+def test_chain_ladder_class_matches_rust_golden_fixture_values():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021, 2022],
+        development_ages=[12, 24, 36],
+        rows=[
+            [100.0, 180.0, 240.0],
+            [120.0, 210.0, None],
+            [150.0, None, None],
+        ],
+    )
+
+    # Expected values come from the shared Rust core golden fixture.
+    expected_origins = expected_basic_chain_ladder_origins()
+
+    assert len(result["origins"]) == len(expected_origins)
+    for actual, expected in zip(result["origins"], expected_origins, strict=True):
+        assert actual["origin_index"] == int(expected["origin_index"])
+        assert actual["origin_period"] == int(expected["origin_period"])
+        assert actual["latest_development_index"] == int(
+            expected["latest_development_index"]
+        )
+        assert actual["latest_development_age"] == int(expected["latest_development_age"])
+        assert_close(actual["latest_observed"], float(expected["latest_observed"]))
+        assert_close(
+            actual["remaining_factor_product"],
+            float(expected["remaining_factor_product"]),
+        )
+        assert_close(actual["tail_factor"], float(expected["tail_factor"]))
+        assert_close(actual["cdf_to_ultimate"], float(expected["cdf_to_ultimate"]))
+        assert_close(actual["ultimate"], float(expected["ultimate"]))
+        assert_close(actual["reserve"], float(expected["reserve"]))
 
 
 def test_chain_ladder_class_only_materializes_inputs_before_delegating(monkeypatch):

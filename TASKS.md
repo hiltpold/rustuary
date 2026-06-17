@@ -102,8 +102,8 @@ Goal: actuaries can run the Rust calculation from Python notebooks on an already
 * [x] Add `ReserveResult.to_pandas()`.
 * [x] Add `ReserveResult.audit_trail()`.
 * [x] Preserve mapping metadata and source/canonical column names in the audit trail.
-* [ ] Add Python tests for mapping, validation, and result shape.
-* [ ] Add Python test comparing result values to the Rust golden fixture.
+* [x] Add Python tests for mapping, validation, and result shape.
+* [x] Add Python test comparing result values to the Rust golden fixture.
 * [ ] Add notebook smoke test that loads custom-column triangle data and runs chain ladder.
 * [ ] Update `CHANGELOG.md`.
 * [ ] Update `contracts/DATA_CONTRACTS.md` if result schema changes.
