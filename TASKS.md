@@ -107,7 +107,7 @@ Goal: actuaries can run the Rust calculation from Python notebooks on an already
 * [x] Add notebook smoke test that loads custom-column triangle data and runs chain ladder.
 * [x] Update `CHANGELOG.md`.
 * [x] Update `contracts/DATA_CONTRACTS.md` if result schema changes.
-* [ ] Update `docs/actuarial/model-governance.md` if calculation behavior changes.
+* [x] Update `docs/actuarial/model-governance.md` if calculation behavior changes.
 
 ---
 

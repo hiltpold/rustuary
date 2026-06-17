@@ -63,6 +63,7 @@ Record material model changes here or link to relevant ADRs and changelog entrie
 
 | Date | Change | Impact | Validation |
 |---|---|---|---|
+| 2026-06-17 | Added Python result audit evidence | No formula or selection change; Python `ReserveResult` now exposes summary, diagnostics, and source-to-canonical input lineage for reproducibility review | Python audit-trail tests, notebook smoke test, and shared golden fixture comparison |
 | 2026-06-16 | Documented golden fixture tolerance policy | No model formula change; shared chain-ladder golden fixture now covers every origin row and documents `1e-9` absolute tolerance | Fixture-backed Rust golden test |
 | 2026-06-16 | Added chain-ladder ultimate, reserve, and origin diagnostics | Origin projections now retain labels, latest observed values, CDF components, selected ultimate, reserve, and reject non-finite projection arithmetic | Unit projection validation tests and expanded golden chain-ladder diagnostics with `1e-9` absolute tolerance |
 | 2026-06-16 | Added typed CDF calculation including tail | CDFs now expose per-development-age diagnostics with remaining selected-factor product, fixed tail factor, and final CDF | Unit validation tests and golden CDF test with `1e-9` absolute tolerance |
@@ -87,8 +88,11 @@ and validation report. Display paths are derived from `portfolio_id` plus
 ordered segment values and are not independent canonical input.
 
 The Python `Triangle` preserves the mapping and canonical schema version in a
-model-run metadata placeholder. Workflow-owned evidence such as source hashes,
-assumption versions, engine versions, and validation reports must be added
-before a persisted model run is considered reproducible.
+model-run metadata placeholder. The Python `ReserveResult.audit_trail()`
+combines that input evidence with result summaries, calculation diagnostics,
+and source-to-canonical column lineage for notebook review. Workflow-owned
+evidence such as source hashes, assumption versions, engine versions, and
+validation reports must still be added before a persisted model run is
+considered reproducible.
 
 Mapping changes that alter calculated results must be treated as behavior changes and covered by tests, changelog notes, and review.
