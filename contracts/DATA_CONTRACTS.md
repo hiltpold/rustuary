@@ -162,6 +162,25 @@ projection arithmetic is an error.
 | `selection_rationale` | string | no | Human explanation. |
 | `diagnostics` | json | yes | Auditable intermediate values, including selected factors, CDF diagnostics, origin projection diagnostics, and assumptions. |
 
+### Python `ReserveResult` adapter shape
+
+The Python binding returns a notebook-facing `ReserveResult` before the
+workflow layer assigns persisted model-run IDs. It exposes:
+
+- `summary()`: one row per origin period with `origin_period`,
+  `latest_development_age`, `latest_observed`, `cdf_to_ultimate`, `ultimate`,
+  and `reserve`.
+- `diagnostics()`: calculation basis, tail factor, age-to-age factors, selected
+  factors, CDFs, CDF diagnostics, and origin diagnostics from the Rust result.
+- `audit_trail()`: model metadata, input metadata, result summary, and
+  diagnostics. The input metadata includes `canonical_schema`,
+  `canonical_schema_version`, `claims_mapping`, and `column_lineage`.
+
+Each `column_lineage` entry records the user-facing mapping field, canonical
+field, and either a source column or constant used to build the canonical
+triangle. Dense canonical inputs use the canonical field names as their source
+columns and record the cumulative basis as a constant.
+
 ## Column mapping contract
 
 Rustuary has canonical logical schemas, but user data rarely arrives with canonical column names.
