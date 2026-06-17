@@ -114,6 +114,9 @@ definition = ry.TriangleDefinition(
 definition.to_dict()
 ```
 
+For `aggregation="sum"`, `amount` is required. For `aggregation="count"`,
+omit `amount`; each input row contributes one event to the cell count.
+
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).
 It loads custom-column claims data, reviews the canonical `Triangle`, runs

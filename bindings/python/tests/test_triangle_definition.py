@@ -75,6 +75,51 @@ def test_triangle_definition_to_dict_returns_detached_json_safe_snapshot():
     json.dumps(definition.to_dict())
 
 
+def test_triangle_definition_count_aggregation_omits_amount_source():
+    definition = TriangleDefinition(
+        triangle_definition_id="reported-counts-v1",
+        origin_date="accident_date",
+        development_date="report_date",
+        measure={"const": "reported_count"},
+        portfolio_id="reserving_class",
+        aggregation="count",
+        bucket_months=12,
+        output_kind="incremental",
+    )
+
+    payload = definition.to_dict()
+
+    assert definition.amount is None
+    assert "amount" not in payload
+    assert payload["aggregation"] == "count"
+    assert payload["measure"] == {"const": "reported_count"}
+
+
+def test_triangle_definition_sum_aggregation_requires_amount_source():
+    with pytest.raises(TypeError, match="amount"):
+        TriangleDefinition(
+            triangle_definition_id="paid-claims-v1",
+            origin_date="accident_date",
+            development_date="payment_date",
+            measure={"const": "paid"},
+            portfolio_id="reserving_class",
+            aggregation="sum",
+        )
+
+
+def test_triangle_definition_count_aggregation_rejects_amount_source():
+    with pytest.raises(ValueError, match="amount.*count"):
+        TriangleDefinition(
+            triangle_definition_id="reported-counts-v1",
+            origin_date="accident_date",
+            development_date="report_date",
+            amount="claim_id",
+            measure={"const": "reported_count"},
+            portfolio_id="reserving_class",
+            aggregation="count",
+        )
+
+
 def test_triangle_definition_rejects_invalid_bucket_months():
     with pytest.raises(ValueError, match="bucket_months"):
         TriangleDefinition(

@@ -17,9 +17,9 @@ and workflow services use `TriangleDefinition` before invoking the engine.
 | `segments` | ordered list | no | Optional ordered drill-down dimensions below `portfolio_id`. Empty list means no segments. |
 | `origin_date` | string | yes | Source date column used to derive canonical `origin_period`. |
 | `development_date` | string | yes | Source date column used with `origin_date` to derive canonical `development_age`. |
-| `amount` | string | yes | Source amount column for canonical `amount`. |
+| `amount` | string | no | Source amount column for canonical `amount`. Required for `sum`; omitted for simple row-count triangles. |
 | `measure` | string/object | yes | Source column or constant measure such as `paid` or `incurred`. |
-| `aggregation` | string | yes | Aggregation used to build cells. MVP values: `sum`, `count`. |
+| `aggregation` | string | yes | Aggregation used to build cells. MVP values: `sum`, `count`. `count` means one input row contributes one event. |
 | `bucket_months` | integer | yes | Development bucket size in months, between `1` and `12`. |
 | `output_kind` | string | yes | `incremental` or `cumulative` output triangle. |
 | `valuation_date` | string/object | no | Source column or constant valuation date. |

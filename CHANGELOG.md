@@ -50,6 +50,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Changed
 
+- Python `TriangleDefinition` now requires `amount` only for `sum` aggregation; simple `count` aggregation omits `amount`.
 - Selected development-factor numerator and denominator diagnostics are now method-specific aggregates.
 - Rust chain-ladder factor calculation now rejects incremental triangles until explicitly converted.
 

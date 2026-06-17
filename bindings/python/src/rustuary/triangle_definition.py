@@ -42,9 +42,9 @@ class TriangleDefinition:
     triangle_definition_id: str
     origin_date: str
     development_date: str
-    amount: str
     measure: MappingValue
     portfolio_id: MappingValue
+    amount: str | None = None
     aggregation: Aggregation = "sum"
     bucket_months: int = 12
     output_kind: OutputKind = "cumulative"
@@ -58,7 +58,6 @@ class TriangleDefinition:
         _validate_non_empty_string(self.schema_version, "schema_version")
         _validate_source_column(self.origin_date, "origin_date")
         _validate_source_column(self.development_date, "development_date")
-        _validate_source_column(self.amount, "amount")
         _validate_mapping_value(self.measure, "measure")
         _validate_mapping_value(self.portfolio_id, "portfolio_id")
         if self.valuation_date is not None:
@@ -69,6 +68,10 @@ class TriangleDefinition:
         if self.aggregation not in _AGGREGATIONS:
             allowed = ", ".join(sorted(_AGGREGATIONS))
             raise ValueError(f"aggregation must be one of: {allowed}")
+        if self.aggregation == "sum":
+            _validate_source_column(self.amount, "amount")
+        elif self.amount is not None:
+            raise ValueError("amount must be omitted when aggregation is count")
         if self.output_kind not in _OUTPUT_KINDS:
             allowed = ", ".join(sorted(_OUTPUT_KINDS))
             raise ValueError(f"output_kind must be one of: {allowed}")
@@ -93,7 +96,6 @@ class TriangleDefinition:
             "schema_version": self.schema_version,
             "origin_date": self.origin_date,
             "development_date": self.development_date,
-            "amount": self.amount,
             "measure": _json_safe(self.measure),
             "aggregation": self.aggregation,
             "bucket_months": self.bucket_months,
@@ -101,6 +103,8 @@ class TriangleDefinition:
             "portfolio_id": _json_safe(self.portfolio_id),
             "segments": [segment.to_dict() for segment in segments],
         }
+        if self.amount is not None:
+            payload["amount"] = self.amount
         if self.valuation_date is not None:
             payload["valuation_date"] = _json_safe(self.valuation_date)
         if self.currency is not None:
