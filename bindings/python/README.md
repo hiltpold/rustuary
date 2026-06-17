@@ -90,8 +90,8 @@ Planned objects:
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).
-It currently focuses on mapped input review and can now pass the resulting
-`Triangle` to `ChainLadder`.
+It loads custom-column claims data, reviews the canonical `Triangle`, runs
+`ChainLadder`, and captures result diagnostics and audit evidence.
 
 ## Column mapping
 

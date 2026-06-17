@@ -14,7 +14,7 @@ def test_chain_ladder_workbench_executes_current_public_api(monkeypatch):
     code = "\n".join(code_cells)
 
     assert "triangle.validate(" not in code
-    assert "ry.ChainLadder(" not in code
+    assert "ry.ChainLadder(" in code
     assert "ry.ClaimsMapping(" in code
     assert "ry.Triangle.from_frame(" in code
     assert "yaml.safe_load(" in code
@@ -30,3 +30,14 @@ def test_chain_ladder_workbench_executes_current_public_api(monkeypatch):
         REPO_ROOT / "contracts" / "examples" / "claims_mapping.yaml"
     )
     assert namespace["model_run_metadata"]["claims_mapping"]["currency"] == {"const": "CHF"}
+
+    result = namespace["result"]
+    summary = namespace["summary"]
+    diagnostics = namespace["diagnostics"]
+    audit_trail = namespace["audit_trail"]
+
+    assert result["calculation_basis"] == "cumulative"
+    assert [row["origin_period"] for row in summary] == [2020, 2021, 2022]
+    assert summary[0]["reserve"] == 0.0
+    assert diagnostics["selected_factors"][0]["method"] == "volume_weighted"
+    assert audit_trail["input"]["claims_mapping"]["value"] == "paid_loss"
