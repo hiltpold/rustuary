@@ -49,5 +49,7 @@ one or more canonical triangles. Every persisted triangle must be traceable to
 the `TriangleDefinition` that produced it, including the ordered segment list
 and the source columns or constants used for canonical fields.
 
-The Rust engine consumes validated canonical triangles and does not infer
-portfolio, segment, or display-path semantics from raw source data.
+The Rust engine consumes validated canonical triangles. For raw triangle
+building, it consumes typed canonical claim/event records after adapters resolve
+source columns and constants; it does not read dataframes or external source
+column names directly.

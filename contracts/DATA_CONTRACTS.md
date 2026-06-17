@@ -63,6 +63,24 @@ matrix indices, and the latest observed value. The value remains in the
 triangle's current basis; callers requiring cumulative latest values must
 convert the triangle first.
 
+### Canonical Rust claim/event build records
+
+For raw claim/event triangle-building workflows, adapters first resolve
+source-column mappings and constants into typed canonical build records. The
+Rust core may consume these records before dense `Triangle` construction, but
+it still does not read dataframes or source column names directly.
+
+| Field | Type | Required | Notes |
+|---|---|---:|---|
+| `origin_date` | date | yes | Date used by the Rust builder to derive `origin_period`. |
+| `development_date` | date | yes | Date used with `origin_date` to derive `development_age`. |
+| `amount` | finite float | no | Required by `sum` aggregation; omitted for simple `count` records. |
+| `portfolio_id` | string | yes | Main reserving class / actuarial reserving unit. |
+| `segments` | ordered name/value list | no | Ordered values resolved from `TriangleDefinition`. |
+| `measure` | string | yes | `paid`, `incurred`, `reported_count`, etc. |
+| `valuation_date` | date | no | Optional valuation or data-cut context. |
+| `currency` | string | no | Optional currency context for monetary records. |
+
 Link-ratio calculation emits one diagnostic for each origin row where adjacent
 development cells are both observed. For cumulative values `C`, the ratio is
 `C[i, j + 1] / C[i, j]`. Diagnostics include origin and development labels,
@@ -250,7 +268,8 @@ including a reserving-class-only definition and a definition with ordered
 
 Rules:
 
-- Rust core methods consume canonical `Triangle`, `Exposure`, and assumption types only.
+- Rust core methods consume canonical `Triangle`, `Exposure`, assumption types,
+  and typed claim/event build records only.
 - Python, CLI, backend import jobs, and UI import wizards may apply column mappings.
 - Python optional string mappings use a matching input column when present and
   otherwise materialize the string as a constant. `{"const": value}` always

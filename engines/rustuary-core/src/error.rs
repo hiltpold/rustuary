@@ -14,6 +14,15 @@ pub enum ActuarialError {
     #[error("triangle must contain at least one development age")]
     EmptyDevelopmentAxis,
 
+    #[error("claim/event record date {year:04}-{month:02}-{day:02} is invalid")]
+    InvalidClaimEventDate { year: i32, month: u8, day: u8 },
+
+    #[error("claim/event record field `{field}` must be non-empty")]
+    EmptyClaimEventRecordField { field: &'static str },
+
+    #[error("claim/event record amount must be finite")]
+    NonFiniteClaimEventAmount,
+
     #[error("triangle has {row_count} rows but {origin_count} origin periods")]
     OriginAxisLengthMismatch {
         origin_count: usize,

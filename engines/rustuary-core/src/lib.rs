@@ -5,6 +5,7 @@
 
 pub mod error;
 pub mod methods;
+pub mod raw_claim;
 pub mod triangle;
 pub mod types;
 
@@ -19,5 +20,6 @@ pub use methods::development_factor::{
     DevelopmentFactorSelectionAssumptions, LinkRatioExclusion, SelectedDevelopmentFactor,
 };
 pub use methods::link_ratio::{link_ratios, LinkRatio};
+pub use raw_claim::{ClaimEventRecord, ClaimEventRecordInput, RecordDate, SegmentValue};
 pub use triangle::{LatestDiagonalEntry, Triangle, TriangleBasis};
 pub use types::{DevelopmentAge, OriginPeriod};

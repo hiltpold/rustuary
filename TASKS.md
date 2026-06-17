@@ -8,6 +8,10 @@ This backlog is ordered for the first vertical slice. Complete tasks in order un
 
 * Python adapts user dataframes into canonical contracts through explicit mappings.
 
+* Python `TriangleBuilder` owns dataframe adaptation and source-column
+  validation; `rustuary-core` owns deterministic triangle build semantics after
+  inputs are canonicalized.
+
 * `portfolio_id` represents the main reserving class / actuarial reserving unit.
 
 * `segments` represent optional drill-down dimensions below `portfolio_id`.
@@ -111,23 +115,17 @@ Goal: actuaries can run the Rust calculation from Python notebooks on an already
 
 ---
 
-## Slice 2.1 — TriangleDefinition and TriangleBuilder MVP
+## Slice 2.1 — Rust-backed TriangleBuilder MVP
 
-Goal: build actuarial triangles from raw claim/event records, not only from pre-shaped triangle data.
+Goal: build actuarial `TriangleSet` objects from raw claim/event records, not
+only from pre-shaped triangle data. Python adapts dataframes and source-column
+mappings; `rustuary-core` owns deterministic date bucketing, grouping,
+aggregation, and cumulative conversion.
 
-### Core concepts
+### Completed Python configuration surface
 
-* [x] Add `TriangleDefinition` concept.
-* [x] Add `TriangleBuilder` concept.
-* [ ] Add `TriangleSet` concept for multiple triangles built from one dataset.
-* [ ] Add `TriangleKey` or equivalent grouping key with:
-
-  * [ ] `portfolio_id`
-  * [ ] ordered `segments`
-  * [ ] `measure`
-
-### TriangleDefinition fields
-
+* [x] Add Python `TriangleDefinition` concept.
+* [x] Add Python `SegmentDefinition` concept for ordered drill-down dimensions.
 * [x] Support `origin_date`.
 * [x] Support `development_date`.
 * [x] Support `amount`.
@@ -137,63 +135,112 @@ Goal: build actuarial triangles from raw claim/event records, not only from pre-
 * [x] Support `output_kind`.
 * [x] Support `portfolio_id`.
 * [x] Support ordered `segments`.
+* [x] Validate `bucket_months` is an integer between `1` and `12` at the
+  Python configuration boundary.
+* [x] Add Python `TriangleBuilder` validation shell.
+* [x] Add Python adapter validation errors that reference source column names
+  and canonical field names.
+* [x] Add Python tests for `TriangleDefinition`, `TriangleBuilder`, count
+  definitions without `amount`, invalid `bucket_months`, and missing required
+  mapped columns.
 
-### Date resolution
+### Rust engine boundary
 
-* [x] Validate `bucket_months` is between `1` and `12`.
+* [x] Define canonical Rust raw claim/event build-record input after Python
+  dataframe adaptation.
+* [ ] Define the Rust build request from `TriangleDefinition`, or a validated
+  Rust mirror of it.
+* [ ] Implement raw claim/event triangle construction in `rustuary-core`.
+* [ ] Return `TriangleSet`, `TriangleKey`, and build diagnostics from the Rust
+  construction engine.
+* [ ] Expose the Rust triangle-construction engine through PyO3 for Python
+  builders.
+* [ ] Keep Python `TriangleBuilder` as the dataframe adapter and bridge, not
+  the owner of date bucketing, aggregation, grouping, or cumulative conversion
+  semantics.
+* [ ] Design `TriangleSet` construction so per-key work can be parallelized
+  inside `rustuary-core` later without changing the Python API.
+* [ ] Do not expose a Python parallel-execution option until profiling or an
+  actuary workflow shows a need.
+
+### Rust TriangleSet and keys
+
+* [ ] Add Rust `TriangleSet` concept for multiple triangles built from one
+  dataset.
+* [ ] Add Rust `TriangleKey` or equivalent grouping key with:
+
+  * [ ] `portfolio_id`
+  * [ ] ordered `segments`
+  * [ ] `measure`
+
+* [ ] Preserve ordered segment metadata in `TriangleKey`.
+* [ ] Add a method such as `TriangleKey.display_path()` that derives a folder
+  path from `portfolio_id + ordered segments`.
+* [ ] Do not persist `segment_path` as independent canonical truth.
+
+### Date resolution in Rust
+
 * [ ] Support monthly triangles with `bucket_months=1`.
 * [ ] Support quarterly triangles with `bucket_months=3`.
 * [ ] Support half-year triangles with `bucket_months=6`.
 * [ ] Support annual triangles with `bucket_months=12`.
+* [ ] Return a clear unsupported-bucket error for other `bucket_months` values
+  that pass Python's generic `1..12` configuration validation.
 * [ ] Calculate origin period from `origin_date`.
 * [ ] Calculate development age from `origin_date` and `development_date`.
 * [ ] Ensure negative development ages produce clear validation errors.
 * [ ] Ensure invalid or missing dates produce clear validation errors.
 
-### Aggregation
+### Aggregation and conversion in Rust
 
 * [ ] Support `sum` aggregation for monetary triangles.
 * [ ] Support `count` aggregation for simple count triangles.
 * [ ] Defer `count_distinct` unless needed by the first actuary workshop.
 * [ ] Build incremental triangle cells from raw records.
 * [ ] Convert incremental output to cumulative output when requested.
-* [ ] Record whether conversion was applied.
+* [ ] Record whether cumulative conversion was applied.
 
 ### Portfolio and segments
 
-* [ ] Map source reserving-class column to canonical `portfolio_id`.
+* [ ] Map source reserving-class values to canonical `portfolio_id` in the
+  Python adapter before calling Rust.
+* [ ] Resolve source-column and constant values for `measure`, `portfolio_id`,
+  ordered `segments`, `valuation_date`, and `currency`.
 * [ ] Support zero or more ordered segment mappings.
 * [ ] Build one triangle per `portfolio_id + segments + measure`.
-* [ ] Preserve ordered segment metadata in `TriangleKey`.
-* [ ] Add a method such as `TriangleKey.display_path()` that derives a folder path from `portfolio_id + ordered segments`.
-* [ ] Do not persist `segment_path` as independent canonical truth.
 
-### Python API
+### Python bridge API
 
-* [x] Add Python `TriangleDefinition`.
-* [x] Add Python `TriangleBuilder`.
-* [ ] Add Python `TriangleSet`.
+* [ ] Add Python `TriangleSet` wrapper around Rust output.
 * [ ] Add `TriangleBuilder.from_frame(data, definition=...)`.
+* [ ] Have `TriangleBuilder.from_frame(...)` return a `TriangleSet`.
 * [ ] Add `TriangleSet.keys()`.
 * [ ] Add `TriangleSet.get(...)`.
 * [ ] Add `TriangleSet.tree()` or equivalent display helper.
-* [x] Add validation errors that reference source column names and canonical field names.
 * [ ] Add audit metadata showing the full `TriangleDefinition`.
 
-### Tests
+### Tests and fixtures
 
 * [ ] Add fixture with raw claim/event records.
-* [ ] Add test for `bucket_months=1`.
-* [ ] Add test for `bucket_months=3`.
-* [ ] Add test for `bucket_months=12`.
-* [ ] Add test with only `portfolio_id` and no segments.
-* [ ] Add test with ordered segments.
-* [ ] Add test that display path is derived from segment order.
-* [ ] Add test that changing segment order changes display tree order but not source data.
-* [ ] Add test for incremental output.
-* [ ] Add test for cumulative output.
-* [ ] Add test for invalid date ordering.
-* [ ] Add test for missing required mapped columns.
+* [ ] Add deterministic expected-output fixture for the Rust-built
+  `TriangleSet`.
+* [ ] Add Rust test for `bucket_months=1`.
+* [ ] Add Rust test for `bucket_months=3`.
+* [ ] Add Rust test for `bucket_months=6`.
+* [ ] Add Rust test for `bucket_months=12`.
+* [ ] Add Rust test with only `portfolio_id` and no segments.
+* [ ] Add Rust test with ordered segments.
+* [ ] Add Rust or Python bridge test that display path is derived from segment
+  order.
+* [ ] Add Rust or Python bridge test that changing segment order changes
+  display tree order but not source data.
+* [ ] Add Rust test for `sum` aggregation.
+* [ ] Add Rust test for `count` aggregation.
+* [ ] Add Rust test for incremental output.
+* [ ] Add Rust test for cumulative output.
+* [ ] Add Rust test for invalid date ordering.
+* [ ] Add Python bridge test for `TriangleBuilder.from_frame(...)`.
+* [ ] Add Python bridge test for full `TriangleDefinition` audit metadata.
 
 ---
 

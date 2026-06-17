@@ -3,9 +3,10 @@
 `TriangleDefinition` describes how raw claim or event records are grouped and
 transformed into one or more canonical actuarial triangles.
 
-The Rust engine consumes validated canonical triangles. It does not read raw
-records or infer portfolio and segmentation semantics. Adapters, import jobs,
-and workflow services use `TriangleDefinition` before invoking the engine.
+The Rust engine consumes validated canonical triangles and, for raw
+triangle-building workflows, typed canonical claim/event build records after
+adapters have resolved source columns and constants. It does not read
+dataframes or external source column names directly.
 
 ## Required Concepts
 

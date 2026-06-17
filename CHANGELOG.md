@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Rust `ClaimEventRecord` input types for canonical raw claim/event records after dataframe adaptation.
 - Python `TriangleBuilder` for validating raw claim/event frames against `TriangleDefinition` source-column requirements.
 - Python `TriangleDefinition` and `SegmentDefinition` objects for raw claim/event triangle build configuration.
 - Chain-ladder workbench notebook smoke test now runs the mapped custom-column triangle through `ChainLadder`.
