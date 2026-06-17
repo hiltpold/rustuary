@@ -23,6 +23,15 @@ pub enum ActuarialError {
     #[error("claim/event record amount must be finite")]
     NonFiniteClaimEventAmount,
 
+    #[error("triangle build request field `{field}` must be non-empty")]
+    EmptyTriangleBuildRequestField { field: &'static str },
+
+    #[error("triangle build request bucket_months must be between 1 and 12; got {bucket_months}")]
+    InvalidTriangleBuildBucketMonths { bucket_months: u8 },
+
+    #[error("triangle build request segment name `{name}` is duplicated")]
+    DuplicateTriangleBuildSegmentName { name: String },
+
     #[error("triangle has {row_count} rows but {origin_count} origin periods")]
     OriginAxisLengthMismatch {
         origin_count: usize,

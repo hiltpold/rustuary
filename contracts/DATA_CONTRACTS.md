@@ -81,6 +81,18 @@ it still does not read dataframes or source column names directly.
 | `valuation_date` | date | no | Optional valuation or data-cut context. |
 | `currency` | string | no | Optional currency context for monetary records. |
 
+The companion Rust build request mirrors the non-source-column
+`TriangleDefinition` semantics needed by the core:
+
+| Field | Type | Required | Notes |
+|---|---|---:|---|
+| `triangle_definition_id` | string | yes | Stable identifier for audit and reproducibility. |
+| `schema_version` | string | yes | Version of the logical triangle-definition schema. |
+| `aggregation` | enum | yes | MVP values: `sum`, `count`. |
+| `bucket_months` | integer | yes | Development bucket size in months, between `1` and `12`. |
+| `output_kind` | enum | yes | `incremental` or `cumulative` output triangle. |
+| `segment_names` | ordered string list | no | Ordered non-empty unique segment names from `TriangleDefinition`; source columns are not retained in the Rust request. |
+
 Link-ratio calculation emits one diagnostic for each origin row where adjacent
 development cells are both observed. For cumulative values `C`, the ratio is
 `C[i, j + 1] / C[i, j]`. Diagnostics include origin and development labels,

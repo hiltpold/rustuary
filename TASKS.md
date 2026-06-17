@@ -148,7 +148,7 @@ aggregation, and cumulative conversion.
 
 * [x] Define canonical Rust raw claim/event build-record input after Python
   dataframe adaptation.
-* [ ] Define the Rust build request from `TriangleDefinition`, or a validated
+* [x] Define the Rust build request from `TriangleDefinition`, or a validated
   Rust mirror of it.
 * [ ] Implement raw claim/event triangle construction in `rustuary-core`.
 * [ ] Return `TriangleSet`, `TriangleKey`, and build diagnostics from the Rust

@@ -8,6 +8,11 @@ triangle-building workflows, typed canonical claim/event build records after
 adapters have resolved source columns and constants. It does not read
 dataframes or external source column names directly.
 
+Adapters pass Rust a validated build request that mirrors the build-semantic
+fields from `TriangleDefinition`: `triangle_definition_id`, `schema_version`,
+`aggregation`, `bucket_months`, `output_kind`, and ordered segment names. Source
+column names remain adapter metadata.
+
 ## Required Concepts
 
 | Field | Type | Required | Notes |
@@ -30,7 +35,7 @@ Segment entries are ordered:
 
 | Field | Type | Required | Notes |
 |---|---|---:|---|
-| `name` | string | yes | Canonical segment name, for example `country`, `channel`, or `coverage`. |
+| `name` | string | yes | Canonical segment name, for example `country`, `channel`, or `coverage`. Names must be non-empty and unique within a definition. |
 | `source` | string/object | yes | Source column or constant segment value. |
 
 ## Grouping Key

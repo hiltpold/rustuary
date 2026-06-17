@@ -7,6 +7,7 @@ pub mod error;
 pub mod methods;
 pub mod raw_claim;
 pub mod triangle;
+pub mod triangle_build;
 pub mod types;
 
 pub use error::{ActuarialError, Result};
@@ -22,4 +23,8 @@ pub use methods::development_factor::{
 pub use methods::link_ratio::{link_ratios, LinkRatio};
 pub use raw_claim::{ClaimEventRecord, ClaimEventRecordInput, RecordDate, SegmentValue};
 pub use triangle::{LatestDiagonalEntry, Triangle, TriangleBasis};
+pub use triangle_build::{
+    TriangleBuildAggregation, TriangleBuildOutputKind, TriangleBuildRequest,
+    TriangleBuildRequestInput,
+};
 pub use types::{DevelopmentAge, OriginPeriod};
