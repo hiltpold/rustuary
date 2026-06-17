@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, fields
 from datetime import date, datetime
 from decimal import Decimal
@@ -22,6 +22,8 @@ def _json_safe(value: Any) -> Any:
         return str(value)
     if isinstance(value, Mapping):
         return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     raise TypeError(f"unsupported model-run metadata value: {type(value).__name__}")
@@ -34,11 +36,13 @@ class ModelRunMetadata:
     canonical_schema: str
     canonical_schema_version: str
     _claims_mapping_json: str = field(repr=False)
+    _column_lineage_json: str = field(repr=False)
 
     def __init__(
         self,
         *,
         claims_mapping: Mapping[str, Any],
+        column_lineage: Iterable[Mapping[str, Any]] = (),
         canonical_schema: str = CLAIMS_SCHEMA_NAME,
         canonical_schema_version: str = CLAIMS_SCHEMA_VERSION,
     ) -> None:
@@ -48,14 +52,29 @@ class ModelRunMetadata:
             sort_keys=True,
             separators=(",", ":"),
         )
+        lineage_json = json.dumps(
+            _json_safe(list(column_lineage)),
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         object.__setattr__(self, "canonical_schema", canonical_schema)
         object.__setattr__(self, "canonical_schema_version", canonical_schema_version)
         object.__setattr__(self, "_claims_mapping_json", mapping_json)
+        object.__setattr__(self, "_column_lineage_json", lineage_json)
 
     @classmethod
-    def from_claims_mapping(cls, mapping: ClaimsMapping) -> ModelRunMetadata:
+    def from_claims_mapping(
+        cls,
+        mapping: ClaimsMapping,
+        *,
+        source_columns: Iterable[str] | None = None,
+    ) -> ModelRunMetadata:
         snapshot = {field.name: getattr(mapping, field.name) for field in fields(mapping)}
-        return cls(claims_mapping=snapshot)
+        return cls(
+            claims_mapping=snapshot,
+            column_lineage=_claims_mapping_lineage(mapping, source_columns=source_columns),
+        )
 
     @property
     def claims_mapping(self) -> dict[str, Any]:
@@ -65,6 +84,14 @@ class ModelRunMetadata:
             raise TypeError("persisted claims mapping must be a JSON object")
         return value
 
+    @property
+    def column_lineage(self) -> list[dict[str, Any]]:
+        """Return source-to-canonical column lineage for calculation inputs."""
+        value = json.loads(self._column_lineage_json)
+        if not isinstance(value, list):
+            raise TypeError("persisted column lineage must be a JSON array")
+        return value
+
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-safe model-run metadata payload."""
         return {
@@ -72,3 +99,72 @@ class ModelRunMetadata:
             "canonical_schema_version": self.canonical_schema_version,
             "claims_mapping": self.claims_mapping,
         }
+
+
+def _claims_mapping_lineage(
+    mapping: ClaimsMapping,
+    *,
+    source_columns: Iterable[str] | None,
+) -> list[dict[str, Any]]:
+    available_source_columns = None if source_columns is None else frozenset(source_columns)
+    lineage: list[dict[str, Any]] = []
+
+    def append_source(mapping_field: str, canonical_field: str, source_column: str) -> None:
+        lineage.append(
+            {
+                "mapping_field": mapping_field,
+                "canonical_field": canonical_field,
+                "source_column": source_column,
+            }
+        )
+
+    def append_constant(mapping_field: str, canonical_field: str, value: Any) -> None:
+        lineage.append(
+            {
+                "mapping_field": mapping_field,
+                "canonical_field": canonical_field,
+                "constant": _json_safe(value),
+            }
+        )
+
+    def append_optional(mapping_field: str, canonical_field: str, value: Any | None) -> None:
+        if value is None:
+            return
+        if isinstance(value, Mapping):
+            append_constant(mapping_field, canonical_field, _constant_mapping_value(value))
+        elif (
+            isinstance(value, str)
+            and available_source_columns is not None
+            and value in available_source_columns
+        ):
+            append_source(mapping_field, canonical_field, value)
+        elif available_source_columns is not None:
+            append_constant(mapping_field, canonical_field, value)
+        else:
+            lineage.append(
+                {
+                    "mapping_field": mapping_field,
+                    "canonical_field": canonical_field,
+                    "mapping_value": _json_safe(value),
+                }
+            )
+
+    append_optional("portfolio", "portfolio_id", mapping.portfolio)
+    append_optional("valuation_date", "valuation_date", mapping.valuation_date)
+    append_source("origin", "origin_period", mapping.origin)
+    append_source("development", "development_age", mapping.development)
+    append_optional("measure", "measure", mapping.measure)
+    append_source("value", "amount", mapping.value)
+    append_optional("currency", "currency", mapping.currency)
+    if isinstance(mapping.cumulative, bool):
+        append_constant("cumulative", "is_cumulative", mapping.cumulative)
+    else:
+        append_source("cumulative", "is_cumulative", mapping.cumulative)
+
+    return lineage
+
+
+def _constant_mapping_value(value: Mapping[str, Any]) -> Any:
+    if set(value) != {"const"}:
+        raise ValueError("constant mapping objects must contain only a `const` field")
+    return value["const"]

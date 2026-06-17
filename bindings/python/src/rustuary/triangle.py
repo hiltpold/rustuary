@@ -167,7 +167,7 @@ class Triangle:
         source_table = to_arrow_table(data)
         normalized_table = normalize_claims_table(source_table, resolved_mapping)
 
-        return cls(
+        triangle = cls(
             data=normalized_table,
             origin=resolved_mapping.origin,
             development=resolved_mapping.development,
@@ -180,3 +180,12 @@ class Triangle:
             origin_type=resolved_mapping.origin_type,
             development_unit=resolved_mapping.development_unit,
         )
+        object.__setattr__(
+            triangle,
+            "model_run_metadata",
+            ModelRunMetadata.from_claims_mapping(
+                resolved_mapping,
+                source_columns=source_table.column_names,
+            ),
+        )
+        return triangle

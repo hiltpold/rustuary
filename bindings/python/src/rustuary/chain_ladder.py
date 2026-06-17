@@ -7,6 +7,8 @@ from typing import Any, overload
 
 import pyarrow as pa
 
+from .mapping import ClaimsMapping
+from .metadata import ModelRunMetadata
 from .triangle import Triangle
 
 JsonValue = Any
@@ -39,6 +41,7 @@ class ReserveResult(Mapping[str, JsonValue]):
     """Notebook-friendly reserving result returned by actuarial models."""
 
     _payload: dict[str, JsonValue]
+    _audit_input: dict[str, JsonValue] | None = None
 
     def __getitem__(self, key: str) -> JsonValue:
         return self._payload[key]
@@ -86,6 +89,15 @@ class ReserveResult(Mapping[str, JsonValue]):
             "cdfs": _copy_json_value(self._payload["cdfs"]),
             "cdf_diagnostics": _copy_json_value(self._payload["cdf_diagnostics"]),
             "origin_diagnostics": _copy_json_value(self._payload["origins"]),
+        }
+
+    def audit_trail(self) -> dict[str, JsonValue]:
+        """Return input lineage, result summary, and calculation diagnostics."""
+        return {
+            "model": {"name": "chain_ladder"},
+            "input": _copy_json_value(self._audit_input),
+            "result": {"summary": self.summary()},
+            "diagnostics": self.diagnostics(),
         }
 
     def to_arrow(self) -> pa.Table:
@@ -142,15 +154,19 @@ class ChainLadder:
         cells into dense axes and rows. All actuarial calculation and validation
         is delegated to ``rustuary-core`` through the compiled extension.
         """
+        audit_input: dict[str, JsonValue]
         if triangle is not None:
             if origin_periods is not None or development_ages is not None or rows is not None:
                 raise TypeError("triangle cannot be combined with dense triangle arguments")
             origin_periods, development_ages, rows, cumulative = _dense_from_triangle(triangle)
+            audit_input = _audit_input_from_metadata(triangle.model_run_metadata)
         elif origin_periods is None or development_ages is None or rows is None:
             raise TypeError(
                 "fit_predict requires either a Triangle or origin_periods, "
                 "development_ages, and rows"
             )
+        else:
+            audit_input = _dense_audit_input(cumulative=cumulative)
 
         rust = _load_rust_extension()
         payload = rust.chain_ladder(
@@ -163,7 +179,7 @@ class ChainLadder:
             cumulative=cumulative,
             tail_factor=float(self.tail_factor),
         )
-        return ReserveResult(payload)
+        return ReserveResult(payload, audit_input)
 
 
 def _dense_from_triangle(
@@ -216,6 +232,24 @@ def _dense_from_triangle(
     ]
 
     return origin_periods, development_ages, rows, basis_values.pop()
+
+
+def _audit_input_from_metadata(metadata: ModelRunMetadata) -> dict[str, JsonValue]:
+    audit_input = metadata.to_dict()
+    audit_input["column_lineage"] = metadata.column_lineage
+    return audit_input
+
+
+def _dense_audit_input(*, cumulative: bool) -> dict[str, JsonValue]:
+    metadata = ModelRunMetadata.from_claims_mapping(
+        ClaimsMapping(
+            origin="origin_period",
+            development="development_age",
+            value="amount",
+            cumulative=cumulative,
+        )
+    )
+    return _audit_input_from_metadata(metadata)
 
 
 def _integer_axis_value(value: Any, field_name: str) -> int:

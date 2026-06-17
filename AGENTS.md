@@ -105,6 +105,7 @@ A change is not done until:
 - Be conservative with scope: no drive-by features, speculative architecture, or dependency churn.
 - Verify with commands, not confidence.
 - When blocked, report the blocker, what was tried, and the smallest next action.
+- When finished, include a short suggested commit message in the final response.
 
 ## Review checklist
 

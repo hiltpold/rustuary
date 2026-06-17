@@ -50,6 +50,7 @@ result.summary()
 result.to_arrow()
 result.to_pandas()  # requires the pandas extra
 result.diagnostics()["selected_factors"]
+result.audit_trail()["input"]["column_lineage"]
 ```
 
 The lower-level dense form remains available for already-shaped triangle data:
@@ -69,6 +70,7 @@ result.summary()
 result.to_arrow()
 result.to_pandas()  # requires the pandas extra
 result.diagnostics()["selected_factors"]
+result.audit_trail()["input"]["column_lineage"]
 ```
 
 Internal binding:

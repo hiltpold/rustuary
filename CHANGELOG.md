@@ -8,6 +8,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Added
 
+- Python `ReserveResult.audit_trail()` for result summaries, diagnostics, and source-to-canonical input lineage.
 - Python `ReserveResult.to_pandas()` for origin-level summary export as a pandas DataFrame.
 - Python `ReserveResult.to_arrow()` for origin-level summary export as a PyArrow table.
 - Python `ReserveResult.diagnostics()` for selected factors, CDFs, tail factor, basis, and origin diagnostics.

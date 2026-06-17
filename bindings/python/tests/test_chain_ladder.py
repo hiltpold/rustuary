@@ -194,6 +194,154 @@ def test_reserve_result_diagnostics_returns_detached_payload():
     assert result["selected_factors"][0]["factor"] != 999.0
 
 
+def test_reserve_result_audit_trail_includes_mapped_input_lineage():
+    triangle = Triangle.from_frame(
+        [
+            {"segment": "Motor", "AY": 2020, "dev_month": 12, "paid": 100.0, "basis": True},
+            {"segment": "Motor", "AY": 2020, "dev_month": 24, "paid": 180.0, "basis": True},
+            {"segment": "Motor", "AY": 2020, "dev_month": 36, "paid": 240.0, "basis": True},
+            {"segment": "Motor", "AY": 2021, "dev_month": 12, "paid": 120.0, "basis": True},
+            {"segment": "Motor", "AY": 2021, "dev_month": 24, "paid": 210.0, "basis": True},
+            {"segment": "Motor", "AY": 2022, "dev_month": 12, "paid": 150.0, "basis": True},
+        ],
+        origin="AY",
+        development="dev_month",
+        value="paid",
+        cumulative="basis",
+        portfolio="segment",
+        valuation_date={"const": "2026-12-31"},
+        measure={"const": "paid"},
+        currency={"const": "CHF"},
+        origin_type="accident_year",
+        development_unit="months",
+    )
+
+    result = ChainLadder().fit_predict(triangle)
+    audit_trail = result.audit_trail()
+
+    assert audit_trail["model"] == {"name": "chain_ladder"}
+    assert audit_trail["result"]["summary"] == result.summary()
+    assert audit_trail["diagnostics"] == result.diagnostics()
+    assert audit_trail["input"]["canonical_schema"] == "claims_triangle"
+    assert audit_trail["input"]["canonical_schema_version"] == "1"
+    assert audit_trail["input"]["claims_mapping"] == {
+        "origin": "AY",
+        "development": "dev_month",
+        "value": "paid",
+        "cumulative": "basis",
+        "portfolio": "segment",
+        "valuation_date": {"const": "2026-12-31"},
+        "measure": {"const": "paid"},
+        "currency": {"const": "CHF"},
+        "origin_type": "accident_year",
+        "development_unit": "months",
+    }
+    assert audit_trail["input"]["column_lineage"] == [
+        {
+            "mapping_field": "portfolio",
+            "canonical_field": "portfolio_id",
+            "source_column": "segment",
+        },
+        {
+            "mapping_field": "valuation_date",
+            "canonical_field": "valuation_date",
+            "constant": "2026-12-31",
+        },
+        {
+            "mapping_field": "origin",
+            "canonical_field": "origin_period",
+            "source_column": "AY",
+        },
+        {
+            "mapping_field": "development",
+            "canonical_field": "development_age",
+            "source_column": "dev_month",
+        },
+        {
+            "mapping_field": "measure",
+            "canonical_field": "measure",
+            "constant": "paid",
+        },
+        {
+            "mapping_field": "value",
+            "canonical_field": "amount",
+            "source_column": "paid",
+        },
+        {
+            "mapping_field": "currency",
+            "canonical_field": "currency",
+            "constant": "CHF",
+        },
+        {
+            "mapping_field": "cumulative",
+            "canonical_field": "is_cumulative",
+            "source_column": "basis",
+        },
+    ]
+
+
+def test_reserve_result_audit_trail_includes_dense_input_lineage():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021],
+        development_ages=[12, 24],
+        rows=[
+            [100.0, 180.0],
+            [120.0, None],
+        ],
+        cumulative=False,
+    )
+
+    audit_trail = result.audit_trail()
+
+    assert audit_trail["input"]["claims_mapping"]["origin"] == "origin_period"
+    assert audit_trail["input"]["claims_mapping"]["development"] == "development_age"
+    assert audit_trail["input"]["claims_mapping"]["value"] == "amount"
+    assert audit_trail["input"]["claims_mapping"]["cumulative"] is False
+    assert audit_trail["input"]["column_lineage"] == [
+        {
+            "mapping_field": "origin",
+            "canonical_field": "origin_period",
+            "source_column": "origin_period",
+        },
+        {
+            "mapping_field": "development",
+            "canonical_field": "development_age",
+            "source_column": "development_age",
+        },
+        {
+            "mapping_field": "value",
+            "canonical_field": "amount",
+            "source_column": "amount",
+        },
+        {
+            "mapping_field": "cumulative",
+            "canonical_field": "is_cumulative",
+            "constant": False,
+        },
+    ]
+
+
+def test_reserve_result_audit_trail_returns_detached_payload():
+    result = ChainLadder().fit_predict(
+        origin_periods=[2020, 2021],
+        development_ages=[12, 24],
+        rows=[
+            [100.0, 180.0],
+            [120.0, None],
+        ],
+    )
+
+    audit_trail = result.audit_trail()
+    audit_trail["input"]["claims_mapping"]["origin"] = "changed"
+    audit_trail["diagnostics"]["selected_factors"][0]["factor"] = 999.0
+    audit_trail["result"]["summary"][0]["reserve"] = 999.0
+
+    fresh_audit_trail = result.audit_trail()
+    assert fresh_audit_trail["input"]["claims_mapping"]["origin"] == "origin_period"
+    assert fresh_audit_trail["diagnostics"]["selected_factors"][0]["factor"] != 999.0
+    assert fresh_audit_trail["result"]["summary"][0]["reserve"] == 0.0
+
+
 def test_reserve_result_to_arrow_returns_summary_table():
     result = ChainLadder().fit_predict(
         origin_periods=[2020, 2021, 2022],
