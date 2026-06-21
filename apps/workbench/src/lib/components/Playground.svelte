@@ -14,6 +14,11 @@
     segments: { name: string; value: string }[];
     originRows: number;
   };
+  type FilterOption = {
+    value: string;
+    label: string;
+    originRows: number;
+  };
   type MappingKey =
     | "origin_date"
     | "development_date"
@@ -145,11 +150,11 @@
   const triangleKeyOptions = $derived(
     createTriangleKeyOptions(triangleRows, selectedSegments),
   );
-  const activeTriangleKey = $derived(
-    triangleKeyOptions.some((option) => option.key === selectedTriangleKey)
-      ? selectedTriangleKey
-      : (triangleKeyOptions[0]?.key ?? ""),
+  const activeTriangleOption = $derived(
+    triangleKeyOptions.find((option) => option.key === selectedTriangleKey) ??
+      triangleKeyOptions[0],
   );
+  const activeTriangleKey = $derived(activeTriangleOption?.key ?? "");
   const activeTriangleRows = $derived(
     triangleRows.filter(
       (row) => createTriangleKey(row, selectedSegments) === activeTriangleKey,
@@ -159,8 +164,18 @@
     activeTriangleRows.length * developmentAges.length,
   );
   const activeTriangleLabel = $derived(
-    triangleKeyOptions.find((option) => option.key === activeTriangleKey)
-      ?.label ?? "No triangle selected",
+    activeTriangleOption?.label ?? "No triangle selected",
+  );
+  const activePathParts = $derived(createActivePathParts(activeTriangleOption));
+  const portfolioFilterOptions = $derived(
+    createPortfolioFilterOptions(triangleKeyOptions),
+  );
+  const segmentFilterOptions = $derived(
+    createSegmentFilterOptions(
+      triangleKeyOptions,
+      selectedSegments,
+      activeTriangleOption,
+    ),
   );
   const latestDevelopmentMonth = $derived(developmentAges.at(-1) ?? 0);
   const segmentSourceOptions = $derived(
@@ -242,6 +257,56 @@
 
   function selectTriangleKey(key: string) {
     selectedTriangleKey = key;
+  }
+
+  function selectPortfolioFilter(portfolioId: string) {
+    selectTriangleByPreference(
+      portfolioId,
+      activeTriangleOption?.segments.map((segment) => segment.value) ?? [],
+      -1,
+    );
+  }
+
+  function selectSegmentFilter(index: number, value: string) {
+    if (!activeTriangleOption) {
+      return;
+    }
+
+    const segmentValues = activeTriangleOption.segments.map(
+      (segment) => segment.value,
+    );
+    segmentValues[index] = value;
+
+    selectTriangleByPreference(
+      activeTriangleOption.portfolioId,
+      segmentValues,
+      index,
+    );
+  }
+
+  function selectTriangleByPreference(
+    portfolioId: string,
+    segmentValues: string[],
+    strictSegmentIndex: number,
+  ) {
+    const candidates = triangleKeyOptions.filter((option) => {
+      if (option.portfolioId !== portfolioId) {
+        return false;
+      }
+
+      for (let index = 0; index <= strictSegmentIndex; index += 1) {
+        if (option.segments[index]?.value !== segmentValues[index]) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const bestOption = chooseBestTriangleOption(candidates, segmentValues);
+    if (bestOption) {
+      selectedTriangleKey = bestOption.key;
+    }
   }
 
   function updateSegmentName(index: number, name: string) {
@@ -440,6 +505,127 @@
     return Array.from(options.values()).sort((left, right) =>
       left.label.localeCompare(right.label),
     );
+  }
+
+  function createPortfolioFilterOptions(
+    paths: TriangleKeyOption[],
+  ): FilterOption[] {
+    const counts = new Map<string, number>();
+
+    for (const path of paths) {
+      counts.set(
+        path.portfolioId,
+        (counts.get(path.portfolioId) ?? 0) + path.originRows,
+      );
+    }
+
+    return createFilterOptionsFromCounts(counts);
+  }
+
+  function createSegmentFilterOptions(
+    paths: TriangleKeyOption[],
+    segments: SegmentDefinition[],
+    activeOption: TriangleKeyOption | undefined,
+  ): Record<string, FilterOption[]> {
+    const optionsBySegment: Record<string, FilterOption[]> = {};
+
+    for (const [segmentIndex, segment] of segments.entries()) {
+      const counts = new Map<string, number>();
+
+      for (const path of paths) {
+        if (activeOption && path.portfolioId !== activeOption.portfolioId) {
+          continue;
+        }
+
+        const previousSegmentsMatch = segments
+          .slice(0, segmentIndex)
+          .every(
+            (_, index) =>
+              path.segments[index]?.value ===
+              activeOption?.segments[index]?.value,
+          );
+
+        if (!previousSegmentsMatch) {
+          continue;
+        }
+
+        const value = path.segments[segmentIndex]?.value ?? "";
+        counts.set(value, (counts.get(value) ?? 0) + path.originRows);
+      }
+
+      optionsBySegment[segment.id] = createFilterOptionsFromCounts(counts);
+    }
+
+    return optionsBySegment;
+  }
+
+  function createFilterOptionsFromCounts(
+    counts: Map<string, number>,
+  ): FilterOption[] {
+    return Array.from(counts.entries())
+      .map(([value, originRows]) => ({
+        value,
+        label: value || "blank",
+        originRows,
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label));
+  }
+
+  function chooseBestTriangleOption(
+    candidates: TriangleKeyOption[],
+    segmentValues: string[],
+  ) {
+    return candidates.reduce<TriangleKeyOption | undefined>(
+      (bestOption, option) => {
+        if (!bestOption) {
+          return option;
+        }
+
+        const score = segmentPrefixScore(option, segmentValues);
+        const bestScore = segmentPrefixScore(bestOption, segmentValues);
+
+        if (score > bestScore) {
+          return option;
+        }
+
+        if (score === bestScore && option.originRows > bestOption.originRows) {
+          return option;
+        }
+
+        return bestOption;
+      },
+      undefined,
+    );
+  }
+
+  function segmentPrefixScore(
+    option: TriangleKeyOption,
+    segmentValues: string[],
+  ) {
+    let score = 0;
+
+    for (const [index, value] of segmentValues.entries()) {
+      if (option.segments[index]?.value !== value) {
+        break;
+      }
+
+      score += 1;
+    }
+
+    return score;
+  }
+
+  function createActivePathParts(option: TriangleKeyOption | undefined) {
+    if (!option) {
+      return [];
+    }
+
+    return [
+      `Portfolio: ${option.portfolioId || "unmapped"}`,
+      ...option.segments.map(
+        (segment) => `${segment.name}: ${segment.value || "blank"}`,
+      ),
+    ];
   }
 
   function createTriangleKey(row: PreviewRow, segments: SegmentDefinition[]) {
@@ -830,20 +1016,56 @@
             {triangleKeyOptions.length} paths
           </span>
         </div>
-        <label class="mt-3 block">
-          <span class="text-xs font-medium text-slate-600">Path</span>
-          <select
-            class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-            value={activeTriangleKey}
-            onchange={(event) => selectTriangleKey(event.currentTarget.value)}
-          >
-            {#each triangleKeyOptions as option}
-              <option value={option.key}>
-                {option.label} ({option.originRows})
-              </option>
+        <div class="mt-3 space-y-3">
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600">Portfolio</span>
+            <select
+              class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              value={activeTriangleOption?.portfolioId ?? ""}
+              onchange={(event) =>
+                selectPortfolioFilter(event.currentTarget.value)}
+            >
+              {#each portfolioFilterOptions as option}
+                <option value={option.value}>
+                  {option.label} ({option.originRows})
+                </option>
+              {/each}
+            </select>
+          </label>
+          {#each selectedSegments as segment, index}
+            <label class="block">
+              <span class="text-xs font-medium text-slate-600">
+                {displaySegmentName(segment)}
+              </span>
+              <select
+                class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                value={activeTriangleOption?.segments[index]?.value ?? ""}
+                onchange={(event) =>
+                  selectSegmentFilter(index, event.currentTarget.value)}
+              >
+                {#each segmentFilterOptions[segment.id] ?? [] as option}
+                  <option value={option.value}>
+                    {option.label} ({option.originRows})
+                  </option>
+                {/each}
+              </select>
+            </label>
+          {/each}
+        </div>
+        <div class="mt-3 rounded-md bg-slate-50 px-3 py-2">
+          <div class="text-xs font-medium text-slate-600">Active path</div>
+          <div class="mt-2 flex flex-wrap gap-1">
+            {#each activePathParts as part}
+              <span
+                class="max-w-full truncate rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700"
+              >
+                {part}
+              </span>
+            {:else}
+              <span class="text-xs text-slate-500">No path</span>
             {/each}
-          </select>
-        </label>
+          </div>
+        </div>
         <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
           <div class="rounded-md bg-slate-100 px-2 py-2">
             <dt class="text-slate-500">Rows</dt>
@@ -858,25 +1080,30 @@
             </dd>
           </div>
         </dl>
-        <ol class="mt-3 max-h-[calc(100vh-28rem)] space-y-2 overflow-auto">
-          {#each triangleKeyOptions as option}
-            <li>
-              <button
-                type="button"
-                class="w-full rounded-md border px-3 py-2 text-left text-sm {option.key ===
-                activeTriangleKey
-                  ? 'border-slate-400 bg-slate-100 text-slate-950'
-                  : 'border-slate-200 bg-slate-50 text-slate-700'}"
-                onclick={() => selectTriangleKey(option.key)}
-              >
-                <span class="block truncate">{option.label}</span>
-                <span class="mt-1 block text-xs text-slate-500">
-                  {option.originRows} origin rows
-                </span>
-              </button>
-            </li>
-          {/each}
-        </ol>
+        <details class="mt-3">
+          <summary class="cursor-pointer text-sm font-medium text-slate-700">
+            All paths
+          </summary>
+          <ol class="mt-2 max-h-[calc(100vh-34rem)] space-y-2 overflow-auto">
+            {#each triangleKeyOptions as option}
+              <li>
+                <button
+                  type="button"
+                  class="w-full rounded-md border px-3 py-2 text-left text-sm {option.key ===
+                  activeTriangleKey
+                    ? 'border-slate-400 bg-slate-100 text-slate-950'
+                    : 'border-slate-200 bg-slate-50 text-slate-700'}"
+                  onclick={() => selectTriangleKey(option.key)}
+                >
+                  <span class="block truncate">{option.label}</span>
+                  <span class="mt-1 block text-xs text-slate-500">
+                    {option.originRows} origin rows
+                  </span>
+                </button>
+              </li>
+            {/each}
+          </ol>
+        </details>
       </aside>
 
       <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
