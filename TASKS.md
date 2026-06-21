@@ -158,9 +158,9 @@ aggregation, and cumulative conversion.
 * [x] Keep Python `TriangleBuilder` as the dataframe adapter and bridge, not
   the owner of date bucketing, aggregation, grouping, or cumulative conversion
   semantics.
-* [ ] Design `TriangleSet` construction so per-key work can be parallelized
+* [x] Design `TriangleSet` construction so per-key work can be parallelized
   inside `rustuary-core` later without changing the Python API.
-* [ ] Do not expose a Python parallel-execution option until profiling or an
+* [x] Do not expose a Python parallel-execution option until profiling or an
   actuary workflow shows a need.
 
 ### Rust TriangleSet and keys

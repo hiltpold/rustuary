@@ -332,19 +332,8 @@ pub fn build_triangle_set(
 
     let cumulative_conversion_applied =
         request.output_kind() == TriangleBuildOutputKind::Cumulative;
-    let mut triangles = Vec::with_capacity(groups.len());
-    for (key, accumulator) in groups {
-        let source_record_count = accumulator.record_count;
-        let triangle = build_triangle_from_cells(&accumulator.cells, request.output_kind())?;
-        triangles.push(BuiltTriangle {
-            key,
-            triangle,
-            diagnostics: BuiltTriangleDiagnostics {
-                source_record_count,
-                cumulative_conversion_applied,
-            },
-        });
-    }
+    let triangles =
+        finalize_triangle_groups(groups, request.output_kind(), cumulative_conversion_applied)?;
 
     Ok(TriangleSet {
         diagnostics: TriangleBuildDiagnostics {
@@ -353,6 +342,42 @@ pub fn build_triangle_set(
             cumulative_conversion_applied,
         },
         triangles,
+    })
+}
+
+fn finalize_triangle_groups(
+    groups: BTreeMap<TriangleKey, GroupAccumulator>,
+    output_kind: TriangleBuildOutputKind,
+    cumulative_conversion_applied: bool,
+) -> Result<Vec<BuiltTriangle>> {
+    // Each accumulated group is independent after record validation and
+    // grouping. This boundary is the future Rust-only parallelization point.
+    groups
+        .into_iter()
+        .map(|(key, accumulator)| {
+            finalize_triangle_group(key, accumulator, output_kind, cumulative_conversion_applied)
+        })
+        .collect()
+}
+
+fn finalize_triangle_group(
+    key: TriangleKey,
+    accumulator: GroupAccumulator,
+    output_kind: TriangleBuildOutputKind,
+    cumulative_conversion_applied: bool,
+) -> Result<BuiltTriangle> {
+    let GroupAccumulator {
+        cells,
+        record_count: source_record_count,
+    } = accumulator;
+    let triangle = build_triangle_from_cells(&cells, output_kind)?;
+    Ok(BuiltTriangle {
+        key,
+        triangle,
+        diagnostics: BuiltTriangleDiagnostics {
+            source_record_count,
+            cumulative_conversion_applied,
+        },
     })
 }
 
