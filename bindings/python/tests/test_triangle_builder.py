@@ -2,7 +2,13 @@ import pytest
 import pyarrow as pa
 
 import rustuary.triangle_builder as triangle_builder_module
-from rustuary import ColumnMappingError, SegmentDefinition, TriangleBuilder, TriangleDefinition
+from rustuary import (
+    ColumnMappingError,
+    SegmentDefinition,
+    TriangleBuilder,
+    TriangleDefinition,
+    TriangleSet,
+)
 
 
 def test_triangle_builder_stores_definition_and_required_source_columns():
@@ -273,6 +279,68 @@ def test_triangle_builder_build_payload_reports_null_raw_dates():
                 }
             ]
         )
+
+
+def test_triangle_builder_from_frame_returns_triangle_set_with_audit_metadata(monkeypatch):
+    definition = TriangleDefinition(
+        triangle_definition_id="paid-claims-v1",
+        origin_date="accident_date",
+        development_date="payment_date",
+        amount="paid_loss",
+        measure={"const": "paid"},
+        portfolio_id="reserving_class",
+    )
+
+    class FakeRust:
+        def build_triangle_set(self, request, records):
+            return {
+                "diagnostics": {
+                    "source_record_count": len(records),
+                    "triangle_count": 1,
+                    "cumulative_conversion_applied": True,
+                },
+                "triangles": [
+                    {
+                        "key": {
+                            "portfolio_id": "Motor",
+                            "segments": [],
+                            "measure": "paid",
+                            "display_path": "Motor",
+                        },
+                        "origin_periods": [2024],
+                        "development_ages": [12],
+                        "rows": [[100.0]],
+                        "basis": "cumulative",
+                        "diagnostics": {
+                            "source_record_count": len(records),
+                            "cumulative_conversion_applied": True,
+                        },
+                    }
+                ],
+            }
+
+    monkeypatch.setattr(triangle_builder_module, "_load_rust_extension", lambda: FakeRust())
+
+    triangle_set = TriangleBuilder.from_frame(
+        [
+            {
+                "reserving_class": "Motor",
+                "accident_date": "2024-01-15",
+                "payment_date": "2024-03-10",
+                "paid_loss": 100.0,
+            }
+        ],
+        definition=definition,
+    )
+
+    assert isinstance(triangle_set, TriangleSet)
+    assert triangle_set.diagnostics()["source_record_count"] == 1
+    assert triangle_set.audit_trail()["input"]["triangle_definition"] == definition.to_dict()
+
+
+def test_triangle_builder_from_frame_rejects_wrong_definition_type():
+    with pytest.raises(TypeError, match="TriangleDefinition"):
+        TriangleBuilder.from_frame([], definition="paid-claims-v1")
 
 
 def test_triangle_builder_rejects_wrong_definition_type():

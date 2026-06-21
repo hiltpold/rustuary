@@ -10,6 +10,7 @@ import pyarrow as pa
 from ._dataframe import to_arrow_table
 from .errors import ColumnMappingError
 from .triangle_definition import SegmentDefinition, TriangleDefinition
+from .triangle_set import TriangleSet
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +22,18 @@ class TriangleBuilder:
     def __post_init__(self) -> None:
         if not isinstance(self.definition, TriangleDefinition):
             raise TypeError("definition must be a TriangleDefinition")
+
+    @classmethod
+    def from_frame(cls, data: Any, *, definition: TriangleDefinition) -> TriangleSet:
+        """Build a Rust-backed ``TriangleSet`` from a raw claim/event dataframe."""
+        if not isinstance(definition, TriangleDefinition):
+            raise TypeError("definition must be a TriangleDefinition")
+        builder = cls(definition)
+        payload = builder._build_payload(data)
+        return TriangleSet(
+            payload,
+            audit_input={"triangle_definition": definition.to_dict()},
+        )
 
     def required_source_columns(self) -> tuple[str, ...]:
         """Return source columns required by the builder definition."""

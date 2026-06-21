@@ -9,6 +9,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 ### Added
 
 - Rust raw claim/event triangle construction into deterministic `TriangleSet` outputs with `TriangleKey` grouping, date bucketing, `sum`/`count` aggregation, and cumulative conversion diagnostics.
+- Python `TriangleBuilder.from_frame(...)` for building Rust-backed `TriangleSet` results from raw claim/event dataframes.
 - Python `TriangleSet` wrapper for Rust-built triangle-set payloads.
 - Low-level PyO3 bridge for Rust raw claim/event triangle-set construction from canonical Python request and record payloads.
 - Rust `TriangleBuildRequest` types for the build-semantic mirror of Python `TriangleDefinition`.

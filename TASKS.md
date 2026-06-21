@@ -215,12 +215,12 @@ aggregation, and cumulative conversion.
 ### Python bridge API
 
 * [x] Add Python `TriangleSet` wrapper around Rust output.
-* [ ] Add `TriangleBuilder.from_frame(data, definition=...)`.
-* [ ] Have `TriangleBuilder.from_frame(...)` return a `TriangleSet`.
-* [ ] Add `TriangleSet.keys()`.
-* [ ] Add `TriangleSet.get(...)`.
-* [ ] Add `TriangleSet.tree()` or equivalent display helper.
-* [ ] Add audit metadata showing the full `TriangleDefinition`.
+* [x] Add `TriangleBuilder.from_frame(data, definition=...)`.
+* [x] Have `TriangleBuilder.from_frame(...)` return a `TriangleSet`.
+* [x] Add `TriangleSet.keys()`.
+* [x] Add `TriangleSet.get(...)`.
+* [x] Add `TriangleSet.tree()` or equivalent display helper.
+* [x] Add audit metadata showing the full `TriangleDefinition`.
 
 ### Tests and fixtures
 
@@ -235,15 +235,15 @@ aggregation, and cumulative conversion.
 * [x] Add Rust test with ordered segments.
 * [x] Add Rust or Python bridge test that display path is derived from segment
   order.
-* [ ] Add Rust or Python bridge test that changing segment order changes
+* [x] Add Rust or Python bridge test that changing segment order changes
   display tree order but not source data.
 * [x] Add Rust test for `sum` aggregation.
 * [x] Add Rust test for `count` aggregation.
 * [x] Add Rust test for incremental output.
 * [x] Add Rust test for cumulative output.
 * [x] Add Rust test for invalid date ordering.
-* [ ] Add Python bridge test for `TriangleBuilder.from_frame(...)`.
-* [ ] Add Python bridge test for full `TriangleDefinition` audit metadata.
+* [x] Add Python bridge test for `TriangleBuilder.from_frame(...)`.
+* [x] Add Python bridge test for full `TriangleDefinition` audit metadata.
 
 ---
 

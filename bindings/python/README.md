@@ -118,18 +118,29 @@ For `aggregation="sum"`, `amount` is required. For `aggregation="count"`,
 omit `amount`; each input row contributes one event to the cell count.
 
 `TriangleBuilder` validates raw claim/event frames against a
-`TriangleDefinition` before later triangle-set construction:
+`TriangleDefinition` and builds Rust-backed triangle sets:
 
 ```python
 builder = ry.TriangleBuilder(definition)
 
 builder.required_source_columns()
 builder.validate_frame(raw_claims)
+
+triangle_set = ry.TriangleBuilder.from_frame(raw_claims, definition=definition)
+
+triangle_set.keys()
+triangle_set.get(
+    portfolio_id="Motor",
+    measure="paid",
+    segments={"country": "CH", "coverage": "MTPL"},
+)
+triangle_set.tree()
+triangle_set.audit_trail()["input"]["triangle_definition"]
 ```
 
 `TriangleSet` wraps Rust-built triangle-set payloads with detached `to_dict()`,
-`diagnostics()`, and `triangles()` accessors. The public
-`TriangleBuilder.from_frame(...)` construction workflow is still pending.
+`diagnostics()`, `triangles()`, `keys()`, `get(...)`, `tree()`, and
+`audit_trail()` accessors.
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).
