@@ -18,7 +18,7 @@
   let { label, rows, columns, height = "320px" }: Props = $props();
 
   let gridElement: HTMLDivElement;
-  let gridApi: GridApi<GridRow> | undefined;
+  let gridApi = $state<GridApi<GridRow> | undefined>();
 
   onMount(() => {
     let destroyed = false;

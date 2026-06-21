@@ -6,12 +6,17 @@ The current `/` and `/playground` routes render a non-production playground shel
 for early workflow review. It uses Tailwind CSS for layout/styling and AG Grid
 Community for dense preview grids.
 
+The default playground sample generates a synthetic 500-development-month
+triangle so the grid can be reviewed under a more realistic horizontal scrolling
+and rendering load before production data is connected.
+
 ## Current scope
 
 This app is intentionally small while the actuarial notebook workflow is still
 being reviewed. The playground is for interaction design only:
 
 - sample outputs only
+- deterministic synthetic stress data only
 - no production calculations
 - no audit-controlled runs
 - no protected claims data in browser state, logs, or URLs

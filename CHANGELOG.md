@@ -9,7 +9,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 ### Added
 
 - Rust raw claim/event triangle construction into deterministic `TriangleSet` outputs with `TriangleKey` grouping, date bucketing, `sum`/`count` aggregation, and cumulative conversion diagnostics.
-- Minimal SvelteKit workbench playground shell with AG Grid previews and Tailwind styling.
+- Minimal SvelteKit workbench playground shell with AG Grid previews, Tailwind styling, and synthetic 500-month triangle stress data.
 - Python `TriangleBuilder.from_frame(...)` for building Rust-backed `TriangleSet` results from raw claim/event dataframes.
 - Python `TriangleSet` wrapper for Rust-built triangle-set payloads.
 - Low-level PyO3 bridge for Rust raw claim/event triangle-set construction from canonical Python request and record payloads.
@@ -67,6 +67,8 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 ### Removed
 
 ### Fixed
+
+- Workbench playground controls now refresh the AG Grid triangle preview when structural options such as bucket size change.
 
 ### Security
 
