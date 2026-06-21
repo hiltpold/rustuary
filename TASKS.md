@@ -155,7 +155,7 @@ aggregation, and cumulative conversion.
   construction engine.
 * [x] Expose the Rust triangle-construction engine through PyO3 for Python
   builders.
-* [ ] Keep Python `TriangleBuilder` as the dataframe adapter and bridge, not
+* [x] Keep Python `TriangleBuilder` as the dataframe adapter and bridge, not
   the owner of date bucketing, aggregation, grouping, or cumulative conversion
   semantics.
 * [ ] Design `TriangleSet` construction so per-key work can be parallelized
@@ -190,7 +190,7 @@ aggregation, and cumulative conversion.
 * [x] Calculate development age from `origin_date` and `development_date`.
 * [x] Ensure negative development ages produce clear validation errors.
 * [x] Ensure invalid Rust record dates produce clear validation errors.
-* [ ] Ensure missing adapter date values produce clear validation errors in the
+* [x] Ensure missing adapter date values produce clear validation errors in the
   Python/PyO3 bridge.
 
 ### Aggregation and conversion in Rust
@@ -204,9 +204,9 @@ aggregation, and cumulative conversion.
 
 ### Portfolio and segments
 
-* [ ] Map source reserving-class values to canonical `portfolio_id` in the
+* [x] Map source reserving-class values to canonical `portfolio_id` in the
   Python adapter before calling Rust.
-* [ ] Resolve source-column and constant values for `measure`, `portfolio_id`,
+* [x] Resolve source-column and constant values for `measure`, `portfolio_id`,
   ordered `segments`, `valuation_date`, and `currency`.
 * [x] Support zero or more ordered segment mappings.
 * [x] Build one triangle per `portfolio_id + segments + measure`.
