@@ -197,7 +197,8 @@ aggregation, and cumulative conversion.
 
 * [x] Support `sum` aggregation for monetary triangles.
 * [x] Support `count` aggregation for simple count triangles.
-* [ ] Defer `count_distinct` unless needed by the first actuary workshop.
+* [x] Defer `count_distinct` unless needed by the first actuary workshop; no
+  contract or API surface is introduced for it in the MVP.
 * [x] Build incremental triangle cells from raw records.
 * [x] Convert incremental output to cumulative output when requested.
 * [x] Record whether cumulative conversion was applied.
@@ -213,7 +214,7 @@ aggregation, and cumulative conversion.
 
 ### Python bridge API
 
-* [ ] Add Python `TriangleSet` wrapper around Rust output.
+* [x] Add Python `TriangleSet` wrapper around Rust output.
 * [ ] Add `TriangleBuilder.from_frame(data, definition=...)`.
 * [ ] Have `TriangleBuilder.from_frame(...)` return a `TriangleSet`.
 * [ ] Add `TriangleSet.keys()`.

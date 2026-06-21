@@ -29,6 +29,7 @@ Available objects:
 - `TriangleDefinition`
 - `SegmentDefinition`
 - `TriangleBuilder`
+- `TriangleSet`
 - `ChainLadder`
 - `ClaimsMapping`
 - `ExposureMapping`
@@ -89,7 +90,6 @@ Planned objects:
 - `BornhuetterFerguson`
 - `CapeCod`
 - `ExpectedLoss`
-- `TriangleSet`
 - `ReservingWorkflow`
 
 Raw claim/event triangle definitions:
@@ -126,6 +126,10 @@ builder = ry.TriangleBuilder(definition)
 builder.required_source_columns()
 builder.validate_frame(raw_claims)
 ```
+
+`TriangleSet` wraps Rust-built triangle-set payloads with detached `to_dict()`,
+`diagnostics()`, and `triangles()` accessors. The public
+`TriangleBuilder.from_frame(...)` construction workflow is still pending.
 
 The deterministic input-review workflow is available in
 [`notebooks/01_chain_ladder_workbench.ipynb`](../../notebooks/01_chain_ladder_workbench.ipynb).

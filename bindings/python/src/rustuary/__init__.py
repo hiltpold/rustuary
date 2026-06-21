@@ -7,6 +7,7 @@ from .metadata import ModelRunMetadata
 from .triangle import Triangle
 from .triangle_builder import TriangleBuilder
 from .triangle_definition import SegmentDefinition, TriangleDefinition
+from .triangle_set import TriangleSet
 
 __all__ = [
     "ChainLadder",
@@ -19,4 +20,5 @@ __all__ = [
     "Triangle",
     "TriangleBuilder",
     "TriangleDefinition",
+    "TriangleSet",
 ]
