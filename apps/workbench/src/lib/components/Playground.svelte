@@ -133,15 +133,6 @@
     createFolderPaths(triangleRows, selectedSegments),
   );
   const latestDevelopmentMonth = $derived(developmentAges.at(-1) ?? 0);
-  const triangleGridKey = $derived(
-    [
-      bucketMonths,
-      outputKind,
-      sampleDepth,
-      selectedSegments.join(","),
-      ...mappingFields.map((field) => selectedMappings[field.key]),
-    ].join("|"),
-  );
 
   function handleFileSelection(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
@@ -543,14 +534,12 @@
           {bucketMonths} month / {outputKind}
         </span>
       </div>
-      {#key triangleGridKey}
-        <AgGrid
-          label="Triangle preview"
-          rows={triangleRows}
-          columns={triangleColumns}
-          height="calc(100vh - 260px)"
-        />
-      {/key}
+      <AgGrid
+        label="Triangle preview"
+        rows={triangleRows}
+        columns={triangleColumns}
+        height="calc(100vh - 260px)"
+      />
     </section>
 
     <section class="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">

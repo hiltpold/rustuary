@@ -68,6 +68,8 @@
 
     gridApi.setGridOption("columnDefs", columns);
     gridApi.setGridOption("rowData", rows);
+    gridApi.refreshHeader();
+    gridApi.refreshCells({ force: true });
   });
 </script>
 
