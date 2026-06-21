@@ -1,0 +1,6 @@
+reserving_class,country,coverage,accident_date,payment_date,paid_loss,currency
+Motor,CH,MTPL,2024-01-15,2024-03-10,100.0,CHF
+Motor,CH,MTPL,2024-01-15,2025-01-05,50.0,CHF
+Motor,CH,MTPL,2025-02-01,2025-08-15,80.0,CHF
+Property,CH,Buildings,2024-04-01,2024-10-12,200.0,CHF
+Property,CH,Buildings,2024-04-01,2025-05-20,25.0,CHF

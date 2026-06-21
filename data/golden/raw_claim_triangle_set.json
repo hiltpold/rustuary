@@ -1,0 +1,84 @@
+{
+  "diagnostics": {
+    "source_record_count": 5,
+    "triangle_count": 2,
+    "cumulative_conversion_applied": true
+  },
+  "triangles": [
+    {
+      "key": {
+        "portfolio_id": "Motor",
+        "segments": [
+          {
+            "name": "country",
+            "value": "CH"
+          },
+          {
+            "name": "coverage",
+            "value": "MTPL"
+          }
+        ],
+        "measure": "paid",
+        "display_path": "Motor/CH/MTPL"
+      },
+      "origin_periods": [
+        2024,
+        2025
+      ],
+      "development_ages": [
+        12,
+        24
+      ],
+      "rows": [
+        [
+          100.0,
+          150.0
+        ],
+        [
+          80.0,
+          null
+        ]
+      ],
+      "basis": "cumulative",
+      "diagnostics": {
+        "source_record_count": 3,
+        "cumulative_conversion_applied": true
+      }
+    },
+    {
+      "key": {
+        "portfolio_id": "Property",
+        "segments": [
+          {
+            "name": "country",
+            "value": "CH"
+          },
+          {
+            "name": "coverage",
+            "value": "Buildings"
+          }
+        ],
+        "measure": "paid",
+        "display_path": "Property/CH/Buildings"
+      },
+      "origin_periods": [
+        2024
+      ],
+      "development_ages": [
+        12,
+        24
+      ],
+      "rows": [
+        [
+          200.0,
+          225.0
+        ]
+      ],
+      "basis": "cumulative",
+      "diagnostics": {
+        "source_record_count": 2,
+        "cumulative_conversion_applied": true
+      }
+    }
+  ]
+}

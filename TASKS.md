@@ -224,8 +224,8 @@ aggregation, and cumulative conversion.
 
 ### Tests and fixtures
 
-* [ ] Add fixture with raw claim/event records.
-* [ ] Add deterministic expected-output fixture for the Rust-built
+* [x] Add fixture with raw claim/event records.
+* [x] Add deterministic expected-output fixture for the Rust-built
   `TriangleSet`.
 * [x] Add Rust test for `bucket_months=1`.
 * [x] Add Rust test for `bucket_months=3`.

@@ -31,3 +31,18 @@ of `1.0`:
   fixed tail factor
 - Ultimate: `latest_observed * cdf_to_ultimate`
 - Reserve: `ultimate - latest_observed`
+
+## `raw_claim_triangle_set.json`
+
+Expected values are hand-calculated from
+[`data/examples/raw_claim_events.csv`](../examples/raw_claim_events.csv) using
+the annual paid-claims `TriangleDefinition` exercised by the Python bridge
+fixture test.
+
+The Rust builder first aggregates records into incremental annual cells, then
+converts each row to cumulative output:
+
+- `Motor / CH / MTPL`, origin `2024`: `12 = 100`, `24 = 100 + 50 = 150`
+- `Motor / CH / MTPL`, origin `2025`: `12 = 80`, `24 = null`
+- `Property / CH / Buildings`, origin `2024`: `12 = 200`,
+  `24 = 200 + 25 = 225`
