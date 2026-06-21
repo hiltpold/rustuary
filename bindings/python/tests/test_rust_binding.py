@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 import rustuary._rust as _rust  # type: ignore[import-untyped]
@@ -5,6 +7,37 @@ import rustuary._rust as _rust  # type: ignore[import-untyped]
 
 def assert_close(actual, expected):
     assert abs(actual - expected) <= 1e-9
+
+
+def raw_triangle_request(**overrides):
+    request = {
+        "triangle_definition_id": "paid-claims-v1",
+        "schema_version": "1",
+        "aggregation": "sum",
+        "bucket_months": 12,
+        "output_kind": "cumulative",
+        "segment_names": ["country", "coverage"],
+    }
+    request.update(overrides)
+    return request
+
+
+def raw_triangle_record(**overrides):
+    record = {
+        "origin_date": date(2024, 1, 15),
+        "development_date": date(2024, 3, 10),
+        "amount": 100.0,
+        "portfolio_id": "Motor",
+        "segments": [
+            {"name": "country", "value": "CH"},
+            {"name": "coverage", "value": "MTPL"},
+        ],
+        "measure": "paid",
+        "valuation_date": "2026-12-31",
+        "currency": "CHF",
+    }
+    record.update(overrides)
+    return record
 
 
 def test_chain_ladder_binding_matches_basic_golden_triangle():
@@ -114,4 +147,97 @@ def test_chain_ladder_binding_maps_core_validation_errors_to_value_error():
             origin_periods=[2020, 2021],
             development_ages=[12],
             rows=[[100.0]],
+        )
+
+
+def test_build_triangle_set_binding_sums_raw_records_into_cumulative_triangles():
+    result = _rust.build_triangle_set(
+        raw_triangle_request(),
+        [
+            raw_triangle_record(),
+            raw_triangle_record(development_date=date(2025, 1, 5), amount=50.0),
+            raw_triangle_record(
+                origin_date=date(2025, 2, 1),
+                development_date=date(2025, 8, 15),
+                amount=80.0,
+            ),
+        ],
+    )
+
+    assert result["diagnostics"] == {
+        "source_record_count": 3,
+        "triangle_count": 1,
+        "cumulative_conversion_applied": True,
+    }
+    assert len(result["triangles"]) == 1
+
+    triangle = result["triangles"][0]
+    assert triangle["key"] == {
+        "portfolio_id": "Motor",
+        "segments": [
+            {"name": "country", "value": "CH"},
+            {"name": "coverage", "value": "MTPL"},
+        ],
+        "measure": "paid",
+        "display_path": "Motor/CH/MTPL",
+    }
+    assert triangle["origin_periods"] == [2024, 2025]
+    assert triangle["development_ages"] == [12, 24]
+    assert triangle["basis"] == "cumulative"
+    assert triangle["rows"] == [[100.0, 150.0], [80.0, None]]
+    assert triangle["diagnostics"] == {
+        "source_record_count": 3,
+        "cumulative_conversion_applied": True,
+    }
+
+
+def test_build_triangle_set_binding_counts_records_without_amounts():
+    result = _rust.build_triangle_set(
+        raw_triangle_request(
+            triangle_definition_id="reported-counts-v1",
+            aggregation="count",
+            output_kind="incremental",
+            segment_names=[],
+        ),
+        [
+            raw_triangle_record(amount=None, segments=[], measure="reported_count"),
+            raw_triangle_record(
+                origin_date={"year": 2024, "month": 1, "day": 20},
+                development_date={"year": 2024, "month": 11, "day": 5},
+                amount=None,
+                segments=[],
+                measure="reported_count",
+            ),
+        ],
+    )
+
+    triangle = result["triangles"][0]
+    assert triangle["key"] == {
+        "portfolio_id": "Motor",
+        "segments": [],
+        "measure": "reported_count",
+        "display_path": "Motor",
+    }
+    assert triangle["origin_periods"] == [2024]
+    assert triangle["development_ages"] == [12]
+    assert triangle["basis"] == "incremental"
+    assert triangle["rows"] == [[2.0]]
+
+
+def test_build_triangle_set_binding_maps_core_errors_to_value_error():
+    with pytest.raises(ValueError, match="does not support bucket_months=2"):
+        _rust.build_triangle_set(
+            raw_triangle_request(bucket_months=2),
+            [raw_triangle_record()],
+        )
+
+
+def test_build_triangle_set_binding_reports_missing_record_dates():
+    with pytest.raises(
+        ValueError,
+        match=r"record 0 canonical field `origin_date` is required and cannot be null",
+    ):
+        _rust.build_triangle_set(
+            raw_triangle_request(),
+            [raw_triangle_record(origin_date=None)],
         )

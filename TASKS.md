@@ -153,7 +153,7 @@ aggregation, and cumulative conversion.
 * [x] Implement raw claim/event triangle construction in `rustuary-core`.
 * [x] Return `TriangleSet`, `TriangleKey`, and build diagnostics from the Rust
   construction engine.
-* [ ] Expose the Rust triangle-construction engine through PyO3 for Python
+* [x] Expose the Rust triangle-construction engine through PyO3 for Python
   builders.
 * [ ] Keep Python `TriangleBuilder` as the dataframe adapter and bridge, not
   the owner of date bucketing, aggregation, grouping, or cumulative conversion
