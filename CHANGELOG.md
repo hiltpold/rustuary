@@ -58,7 +58,7 @@ This project follows the spirit of Keep a Changelog: write entries for people wh
 
 ### Changed
 
-- Workbench playground segment mapping now shows ordered dimensions, supports dynamic segment assignment, and filters the claims triangle to one selected `portfolio_id` plus segment path.
+- Workbench playground now keeps data setup compact, moves triangle paths, bucket size, and output basis into grid-adjacent controls, and supports dynamic segment assignment.
 - Python `TriangleDefinition` now requires `amount` only for `sum` aggregation; simple `count` aggregation omits `amount`.
 - Selected development-factor numerator and denominator diagnostics are now method-specific aggregates.
 - Rust chain-ladder factor calculation now rejects incremental triangles until explicitly converted.

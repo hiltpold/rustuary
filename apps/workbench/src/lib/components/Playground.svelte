@@ -622,241 +622,243 @@
       </dl>
     </header>
 
-    <section
-      class="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_320px]"
-    >
-      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <h2 class="text-sm font-semibold text-slate-800">CSV and sample</h2>
-        <div class="mt-3 grid gap-3 md:grid-cols-2">
-          <label class="block">
-            <span class="text-xs font-medium text-slate-600">Claims CSV</span>
-            <input
-              class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              type="file"
-              accept=".csv,text/csv"
-              onchange={handleFileSelection}
-            />
-          </label>
-          <label class="block">
-            <span class="text-xs font-medium text-slate-600">Sample depth</span>
-            <select
-              class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              bind:value={sampleDepth}
-            >
-              {#each sampleDepthOptions as option}
-                <option value={option.value}>{option.label}</option>
-              {/each}
-            </select>
-          </label>
+    <details class="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <summary
+        class="flex cursor-pointer flex-wrap items-center justify-between gap-3 px-4 py-3"
+      >
+        <div class="min-w-0">
+          <h2 class="text-sm font-semibold text-slate-800">Data setup</h2>
+          <p class="mt-1 truncate text-xs text-slate-500">{fileName}</p>
         </div>
-        <p class="mt-2 truncate text-xs text-slate-500">{fileName}</p>
-      </div>
+        <dl class="grid grid-cols-3 gap-2 text-xs">
+          <div class="rounded-md bg-slate-100 px-2 py-1">
+            <dt class="text-slate-500">Sample</dt>
+            <dd class="font-semibold text-slate-900">{sampleDepth}</dd>
+          </div>
+          <div class="rounded-md bg-slate-100 px-2 py-1">
+            <dt class="text-slate-500">Fields</dt>
+            <dd class="font-semibold text-slate-900">{mappingFields.length}</dd>
+          </div>
+          <div class="rounded-md bg-slate-100 px-2 py-1">
+            <dt class="text-slate-500">Segments</dt>
+            <dd class="font-semibold text-slate-900">
+              {selectedSegments.length}/{segmentSourceOptions.length}
+            </dd>
+          </div>
+        </dl>
+      </summary>
 
-      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-slate-800">Required mapping</h2>
-          <span
-            class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
-          >
-            {mappingFields.length} fields
-          </span>
-        </div>
-        <div class="mt-3 grid gap-2 md:grid-cols-2">
-          {#each mappingFields as field}
-            <label class="block">
-              <span class="text-xs font-medium text-slate-600"
-                >{field.label}</span
+      <div class="border-t border-slate-200 px-4 py-4">
+        <div
+          class="grid gap-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.15fr)_minmax(0,1.6fr)]"
+        >
+          <section>
+            <h3 class="text-sm font-semibold text-slate-800">CSV and sample</h3>
+            <div class="mt-3 grid gap-3">
+              <label class="block">
+                <span class="text-xs font-medium text-slate-600">
+                  Claims CSV
+                </span>
+                <input
+                  class="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  type="file"
+                  accept=".csv,text/csv"
+                  onchange={handleFileSelection}
+                />
+              </label>
+              <label class="block">
+                <span class="text-xs font-medium text-slate-600">
+                  Sample depth
+                </span>
+                <select
+                  class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  bind:value={sampleDepth}
+                >
+                  {#each sampleDepthOptions as option}
+                    <option value={option.value}>{option.label}</option>
+                  {/each}
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-semibold text-slate-800">
+                Required mapping
+              </h3>
+              <span
+                class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
               >
-              <select
-                class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-                value={selectedMappings[field.key]}
-                onchange={(event) =>
-                  updateMapping(field.key, event.currentTarget.value)}
+                {mappingFields.length} fields
+              </span>
+            </div>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              {#each mappingFields as field}
+                <label class="block">
+                  <span class="text-xs font-medium text-slate-600">
+                    {field.label}
+                  </span>
+                  <select
+                    class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                    value={selectedMappings[field.key]}
+                    onchange={(event) =>
+                      updateMapping(field.key, event.currentTarget.value)}
+                  >
+                    {#if field.key === "measure"}
+                      <option value="paid">paid</option>
+                    {/if}
+                    {#each sourceColumns as column}
+                      <option value={column}>{column}</option>
+                    {/each}
+                  </select>
+                </label>
+              {/each}
+            </div>
+          </section>
+
+          <section>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="text-sm font-semibold text-slate-800">
+                Segment mapping
+              </h3>
+              <span
+                class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
               >
-                {#if field.key === "measure"}
-                  <option value="paid">paid</option>
-                {/if}
-                {#each sourceColumns as column}
-                  <option value={column}>{column}</option>
+                {selectedSegments.length}/{segmentSourceOptions.length}
+              </span>
+            </div>
+            <fieldset class="mt-3">
+              <legend class="text-xs font-medium text-slate-600">
+                Ordered dimensions
+              </legend>
+              <div class="mt-2 space-y-2">
+                {#each selectedSegments as segment, index}
+                  <div
+                    class="grid gap-2 rounded-md bg-slate-50 p-2 text-sm md:grid-cols-[2rem_minmax(7rem,1fr)_minmax(8rem,1fr)_auto]"
+                  >
+                    <span class="self-end text-xs font-semibold text-slate-500">
+                      #{index + 1}
+                    </span>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600">
+                        Segment name
+                      </span>
+                      <input
+                        class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                        value={segment.name}
+                        oninput={(event) =>
+                          updateSegmentName(index, event.currentTarget.value)}
+                      />
+                    </label>
+                    <label class="block">
+                      <span class="text-xs font-medium text-slate-600">
+                        Source column
+                      </span>
+                      <select
+                        class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                        value={segment.source}
+                        onchange={(event) =>
+                          updateSegmentSource(index, event.currentTarget.value)}
+                      >
+                        {#each sourceOptionsForSegment(index) as column}
+                          <option value={column}>{column}</option>
+                        {/each}
+                      </select>
+                    </label>
+                    <span class="flex items-end gap-1">
+                      <button
+                        type="button"
+                        class="rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-600 disabled:text-slate-300"
+                        disabled={index === 0}
+                        onclick={() => moveSegment(index, -1)}
+                      >
+                        Up
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-600 disabled:text-slate-300"
+                        disabled={index === selectedSegments.length - 1}
+                        onclick={() => moveSegment(index, 1)}
+                      >
+                        Down
+                      </button>
+                      <button
+                        type="button"
+                        class="rounded-md border border-slate-200 bg-white px-2 py-2 text-xs text-slate-600"
+                        onclick={() => removeSegment(index)}
+                      >
+                        Remove
+                      </button>
+                    </span>
+                  </div>
                 {/each}
-              </select>
-            </label>
-          {/each}
-        </div>
-      </div>
-
-      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-slate-800">Segment mapping</h2>
-          <span
-            class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
-          >
-            {selectedSegments.length}/{segmentSourceOptions.length}
-          </span>
-        </div>
-        <fieldset class="mt-3">
-          <legend class="text-xs font-medium text-slate-600">
-            Ordered dimensions
-          </legend>
-          <div class="mt-2 space-y-2">
-            {#each selectedSegments as segment, index}
-              <div
-                class="rounded-md border border-slate-200 bg-slate-50 p-2 text-sm"
-              >
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-xs font-semibold text-slate-500">
-                    #{index + 1}
-                  </span>
-                  <span class="flex gap-1">
-                    <button
-                      type="button"
-                      class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 disabled:text-slate-300"
-                      disabled={index === 0}
-                      onclick={() => moveSegment(index, -1)}
-                    >
-                      Up
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 disabled:text-slate-300"
-                      disabled={index === selectedSegments.length - 1}
-                      onclick={() => moveSegment(index, 1)}
-                    >
-                      Down
-                    </button>
-                    <button
-                      type="button"
-                      class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600"
-                      onclick={() => removeSegment(index)}
-                    >
-                      Remove
-                    </button>
-                  </span>
-                </div>
-                <div class="mt-2 grid gap-2">
-                  <label class="block">
-                    <span class="text-xs font-medium text-slate-600">
-                      Segment name
-                    </span>
-                    <input
-                      class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-                      value={segment.name}
-                      oninput={(event) =>
-                        updateSegmentName(index, event.currentTarget.value)}
-                    />
-                  </label>
-                  <label class="block">
-                    <span class="text-xs font-medium text-slate-600">
-                      Source column
-                    </span>
-                    <select
-                      class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-                      value={segment.source}
-                      onchange={(event) =>
-                        updateSegmentSource(index, event.currentTarget.value)}
-                    >
-                      {#each sourceOptionsForSegment(index) as column}
-                        <option value={column}>{column}</option>
-                      {/each}
-                    </select>
-                  </label>
-                </div>
               </div>
-            {/each}
-          </div>
-          <div class="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-            <select
-              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
-              bind:value={nextSegmentSource}
-              aria-label="Segment source to add"
-              disabled={availableSegmentSources.length === 0}
-            >
-              {#each availableSegmentSources as column}
-                <option value={column}>{column}</option>
-              {/each}
-            </select>
-            <button
-              type="button"
-              class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:text-slate-300"
-              disabled={availableSegmentSources.length === 0}
-              onclick={addSegment}
-            >
-              Add segment
-            </button>
-          </div>
-        </fieldset>
-        <fieldset class="mt-4">
-          <legend class="text-xs font-medium text-slate-600">Bucket size</legend
-          >
-          <div class="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-slate-100 p-1">
-            {#each bucketMonthOptions as value}
-              <button
-                type="button"
-                onclick={() => selectBucketMonths(value)}
-                class="cursor-pointer rounded-md px-2 py-2 text-center text-sm font-medium {bucketMonths ===
-                value
-                  ? 'bg-white text-slate-950 shadow-sm'
-                  : 'text-slate-600'}"
-              >
-                {value}
-              </button>
-            {/each}
-          </div>
-        </fieldset>
-        <fieldset class="mt-4">
-          <legend class="text-xs font-medium text-slate-600">
-            Output basis
-          </legend>
-          <div class="mt-2 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1">
-            {#each outputKindOptions as value}
-              <button
-                type="button"
-                onclick={() => selectOutputKind(value)}
-                class="cursor-pointer rounded-md px-2 py-2 text-center text-sm font-medium {outputKind ===
-                value
-                  ? 'bg-white text-slate-950 shadow-sm'
-                  : 'text-slate-600'}"
-              >
-                {value}
-              </button>
-            {/each}
-          </div>
-        </fieldset>
-      </div>
-    </section>
-
-    <section class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 class="text-sm font-semibold text-slate-800">Triangle preview</h2>
-          <p class="mt-1 text-xs text-slate-500">
-            {activeTriangleLabel}: {activeTriangleRows.length} origin rows x
-            {developmentAges.length} development columns
-          </p>
+              <div class="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                <select
+                  class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+                  bind:value={nextSegmentSource}
+                  aria-label="Segment source to add"
+                  disabled={availableSegmentSources.length === 0}
+                >
+                  {#each availableSegmentSources as column}
+                    <option value={column}>{column}</option>
+                  {/each}
+                </select>
+                <button
+                  type="button"
+                  class="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 disabled:text-slate-300"
+                  disabled={availableSegmentSources.length === 0}
+                  onclick={addSegment}
+                >
+                  Add segment
+                </button>
+              </div>
+            </fieldset>
+          </section>
         </div>
-        <span class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600">
-          {bucketMonths} month / {outputKind}
-        </span>
       </div>
-      <AgGrid
-        label="Triangle preview"
-        rows={activeTriangleRows}
-        columns={triangleColumns}
-        height="calc(100vh - 260px)"
-      />
-    </section>
+    </details>
 
-    <section class="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-      <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <section class="grid gap-4 xl:grid-cols-[20rem_minmax(0,1fr)]">
+      <aside class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-sm font-semibold text-slate-800">Triangle paths</h2>
+          <h2 class="text-sm font-semibold text-slate-800">Triangle filters</h2>
           <span
             class="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600"
           >
-            {triangleKeyOptions.length}
+            {triangleKeyOptions.length} paths
           </span>
         </div>
-        <ol class="mt-3 max-h-64 space-y-2 overflow-auto">
+        <label class="mt-3 block">
+          <span class="text-xs font-medium text-slate-600">Path</span>
+          <select
+            class="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+            value={activeTriangleKey}
+            onchange={(event) => selectTriangleKey(event.currentTarget.value)}
+          >
+            {#each triangleKeyOptions as option}
+              <option value={option.key}>
+                {option.label} ({option.originRows})
+              </option>
+            {/each}
+          </select>
+        </label>
+        <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
+          <div class="rounded-md bg-slate-100 px-2 py-2">
+            <dt class="text-slate-500">Rows</dt>
+            <dd class="font-semibold text-slate-900">
+              {activeTriangleRows.length}
+            </dd>
+          </div>
+          <div class="rounded-md bg-slate-100 px-2 py-2">
+            <dt class="text-slate-500">Cells</dt>
+            <dd class="font-semibold text-slate-900">
+              {displayedCellCount.toLocaleString("en-US")}
+            </dd>
+          </div>
+        </dl>
+        <ol class="mt-3 max-h-[calc(100vh-28rem)] space-y-2 overflow-auto">
           {#each triangleKeyOptions as option}
             <li>
               <button
@@ -875,8 +877,78 @@
             </li>
           {/each}
         </ol>
-      </div>
+      </aside>
 
+      <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div
+          class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-4 py-3"
+        >
+          <div class="min-w-0">
+            <h2 class="text-sm font-semibold text-slate-800">
+              Claims triangle
+            </h2>
+            <p class="mt-1 truncate text-xs text-slate-500">
+              {activeTriangleLabel}: {activeTriangleRows.length} origin rows x
+              {developmentAges.length} development columns
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <fieldset>
+              <legend class="text-xs font-medium text-slate-600">
+                Bucket size
+              </legend>
+              <div
+                class="mt-1 grid grid-cols-4 gap-1 rounded-lg bg-slate-100 p-1"
+              >
+                {#each bucketMonthOptions as value}
+                  <button
+                    type="button"
+                    onclick={() => selectBucketMonths(value)}
+                    class="min-w-11 cursor-pointer rounded-md px-2 py-2 text-center text-sm font-medium {bucketMonths ===
+                    value
+                      ? 'bg-white text-slate-950 shadow-sm'
+                      : 'text-slate-600'}"
+                  >
+                    {value}
+                  </button>
+                {/each}
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend class="text-xs font-medium text-slate-600">
+                Output basis
+              </legend>
+              <div
+                class="mt-1 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1"
+              >
+                {#each outputKindOptions as value}
+                  <button
+                    type="button"
+                    onclick={() => selectOutputKind(value)}
+                    class="min-w-24 cursor-pointer rounded-md px-2 py-2 text-center text-sm font-medium {outputKind ===
+                    value
+                      ? 'bg-white text-slate-950 shadow-sm'
+                      : 'text-slate-600'}"
+                  >
+                    {value}
+                  </button>
+                {/each}
+              </div>
+            </fieldset>
+          </div>
+        </div>
+        <div class="p-3">
+          <AgGrid
+            label="Claims triangle"
+            rows={activeTriangleRows}
+            columns={triangleColumns}
+            height="calc(100vh - 300px)"
+          />
+        </div>
+      </section>
+    </section>
+
+    <section>
       <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h2 class="text-sm font-semibold text-slate-800">
