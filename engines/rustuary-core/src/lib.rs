@@ -24,7 +24,8 @@ pub use methods::link_ratio::{link_ratios, LinkRatio};
 pub use raw_claim::{ClaimEventRecord, ClaimEventRecordInput, RecordDate, SegmentValue};
 pub use triangle::{LatestDiagonalEntry, Triangle, TriangleBasis};
 pub use triangle_build::{
-    TriangleBuildAggregation, TriangleBuildOutputKind, TriangleBuildRequest,
-    TriangleBuildRequestInput,
+    build_triangle_set, BuiltTriangle, BuiltTriangleDiagnostics, TriangleBuildAggregation,
+    TriangleBuildDiagnostics, TriangleBuildOutputKind, TriangleBuildRequest,
+    TriangleBuildRequestInput, TriangleKey, TriangleSet,
 };
 pub use types::{DevelopmentAge, OriginPeriod};

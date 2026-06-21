@@ -32,6 +32,44 @@ pub enum ActuarialError {
     #[error("triangle build request segment name `{name}` is duplicated")]
     DuplicateTriangleBuildSegmentName { name: String },
 
+    #[error("triangle build requires at least one claim/event record")]
+    EmptyTriangleBuildRecords,
+
+    #[error("triangle build does not support bucket_months={bucket_months}")]
+    UnsupportedTriangleBuildBucketMonths { bucket_months: u8 },
+
+    #[error("sum aggregation requires an amount on claim/event record {record_index}")]
+    MissingClaimEventAmount { record_index: usize },
+
+    #[error("claim/event record {record_index} has development before origin")]
+    NegativeClaimEventDevelopmentAge { record_index: usize },
+
+    #[error("claim/event record {record_index} origin period overflowed")]
+    ClaimEventOriginPeriodOverflow { record_index: usize },
+
+    #[error("claim/event record {record_index} development age overflowed")]
+    ClaimEventDevelopmentAgeOverflow { record_index: usize },
+
+    #[error("claim/event record {record_index} has {actual} segments; expected {expected}")]
+    ClaimEventSegmentCountMismatch {
+        record_index: usize,
+        expected: usize,
+        actual: usize,
+    },
+
+    #[error(
+        "claim/event record {record_index} segment {segment_index} is `{actual}`; expected `{expected}`"
+    )]
+    ClaimEventSegmentNameMismatch {
+        record_index: usize,
+        segment_index: usize,
+        expected: String,
+        actual: String,
+    },
+
+    #[error("claim/event record {record_index} produced a non-finite triangle cell aggregate")]
+    NonFiniteTriangleBuildCell { record_index: usize },
+
     #[error("triangle has {row_count} rows but {origin_count} origin periods")]
     OriginAxisLengthMismatch {
         origin_count: usize,

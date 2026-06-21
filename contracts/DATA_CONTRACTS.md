@@ -93,6 +93,23 @@ The companion Rust build request mirrors the non-source-column
 | `output_kind` | enum | yes | `incremental` or `cumulative` output triangle. |
 | `segment_names` | ordered string list | no | Ordered non-empty unique segment names from `TriangleDefinition`; source columns are not retained in the Rust request. |
 
+Rust construction groups records by:
+
+```text
+portfolio_id + ordered segment values + measure
+```
+
+Records are aggregated into incremental cells first. Empty cells between the
+first and latest observed development age for an origin period are represented
+as zero; later unobserved cells remain missing. When cumulative output is
+requested, the Rust core applies explicit row-wise cumulative conversion and
+records that conversion in build diagnostics.
+
+For `bucket_months=12`, the origin-period label is the calendar year. For
+monthly, quarterly, and half-year buckets, the label is `YYYYMM` using the
+bucket start month. Development age is measured in months from the origin
+bucket start through the end of the development bucket.
+
 Link-ratio calculation emits one diagnostic for each origin row where adjacent
 development cells are both observed. For cumulative values `C`, the ratio is
 `C[i, j + 1] / C[i, j]`. Diagnostics include origin and development labels,

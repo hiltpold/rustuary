@@ -45,7 +45,7 @@ impl RecordDate {
 ///
 /// Segment order is retained by the surrounding record and later becomes part
 /// of the deterministic triangle grouping key.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SegmentValue {
     name: String,
     value: String,
