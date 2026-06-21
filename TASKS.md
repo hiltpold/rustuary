@@ -281,20 +281,20 @@ Goal: validate the full workflow with actuaries before building the full applica
 
 Goal: prepare a small visual playground, but do not build the full platform yet.
 
-* [ ] Add ADR: `docs/adr/0007-use-browser-wasm-only-for-playground.md`.
-* [ ] State that browser WASM is allowed only for playground/demo calculations.
-* [ ] State that production calculations must run server-side through the backend/job engine.
-* [ ] Design a simple `apps/workbench` playground route.
-* [ ] Add CSV upload design.
-* [ ] Add column-mapping UI design.
-* [ ] Add `portfolio_id` mapping control.
-* [ ] Add ordered segment selection control.
-* [ ] Add bucket size selector for `1`, `3`, `6`, and `12` months.
-* [ ] Add incremental/cumulative output toggle.
-* [ ] Add derived folder/tree preview.
-* [ ] Add triangle preview.
-* [ ] Add chain ladder result preview.
-* [ ] Mark the playground as non-production and not audit-controlled.
+* [x] Add ADR: `docs/adr/0007-use-browser-wasm-only-for-playground.md`.
+* [x] State that browser WASM is allowed only for playground/demo calculations.
+* [x] State that production calculations must run server-side through the backend/job engine.
+* [x] Design a simple `apps/workbench` playground route.
+* [x] Add CSV upload design.
+* [x] Add column-mapping UI design.
+* [x] Add `portfolio_id` mapping control.
+* [x] Add ordered segment selection control.
+* [x] Add bucket size selector for `1`, `3`, `6`, and `12` months.
+* [x] Add incremental/cumulative output toggle.
+* [x] Add derived folder/tree preview.
+* [x] Add triangle preview.
+* [x] Add chain ladder result preview.
+* [x] Mark the playground as non-production and not audit-controlled.
 
 Implementation of this slice should wait until the notebook workflow has been reviewed with actuaries.
 

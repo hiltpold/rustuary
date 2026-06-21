@@ -13,9 +13,9 @@ Use an ADR when a change introduces or reverses a meaningful decision about arch
 | 0003 | Data formats | Accepted |
 | 0004 | Use governance documents and scoped agent instructions | Accepted |
 | 0005 | Use scoped AI tooling for Go and SvelteKit | Accepted |
+| 0006 | Keep column mapping outside the Rust core | Accepted |
+| 0007 | Use browser WASM only for playground calculations | Accepted |
 
 ## Template
 
 Use `scripts/new_adr.sh "Decision title"` or copy `docs/templates/adr-template.md`.
-
-- [0006 — Keep column mapping outside the Rust core](0006-keep-column-mapping-outside-rust-core.md)

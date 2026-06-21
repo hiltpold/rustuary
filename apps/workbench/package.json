@@ -8,7 +8,11 @@
     "test": "echo 'no UI tests yet'",
     "lint": "prettier --check ."
   },
+  "dependencies": {
+    "ag-grid-community": "latest"
+  },
   "devDependencies": {
+    "@tailwindcss/vite": "latest",
     "@sveltejs/adapter-auto": "latest",
     "@sveltejs/kit": "latest",
     "@sveltejs/vite-plugin-svelte": "latest",
@@ -17,6 +21,7 @@
     "typescript": "latest",
     "vite": "latest",
     "prettier": "latest",
-    "prettier-plugin-svelte": "latest"
+    "prettier-plugin-svelte": "latest",
+    "tailwindcss": "latest"
   }
 }
